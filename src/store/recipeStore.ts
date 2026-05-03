@@ -1,0 +1,79 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+
+import type { Recipe } from "@/types/recipe";
+import { recipeFingerprint } from "@/utils/recipeFingerprint";
+
+type RecipeStore = {
+  imageUri?: string;
+  imageBase64?: string;
+  manualIngredients: string;
+  detectedIngredients: string[];
+  recipes: Recipe[];
+  shownRecipeFingerprints: string[];
+  refreshCount: number;
+  maxRefreshes: number;
+  canRefresh: boolean;
+  setImage: (uri: string, base64?: string) => void;
+  setManualIngredients: (value: string) => void;
+  setDetectedIngredients: (ingredients: string[]) => void;
+  setRecipes: (recipes: Recipe[]) => void;
+  addShownRecipes: (recipes: Recipe[]) => void;
+  incrementRefreshCount: () => void;
+  setCanRefresh: (value: boolean) => void;
+  resetSession: () => void;
+};
+
+const initialState = {
+  imageUri: undefined,
+  imageBase64: undefined,
+  manualIngredients: "",
+  detectedIngredients: [],
+  recipes: [],
+  shownRecipeFingerprints: [],
+  refreshCount: 0,
+  maxRefreshes: 3,
+  canRefresh: true,
+};
+
+export const useRecipeStore = create<RecipeStore>()(
+  persist(
+    (set) => ({
+      ...initialState,
+      setImage: (uri, base64) => set({ imageUri: uri, imageBase64: base64 }),
+      setManualIngredients: (value) => set({ manualIngredients: value }),
+      setDetectedIngredients: (ingredients) =>
+        set({ detectedIngredients: ingredients }),
+      setRecipes: (recipes) => set({ recipes }),
+      addShownRecipes: (recipes) =>
+        set((state) => ({
+          shownRecipeFingerprints: Array.from(
+            new Set([
+              ...state.shownRecipeFingerprints,
+              ...recipes.map((recipe) => recipeFingerprint(recipe.title)),
+            ]),
+          ),
+        })),
+      incrementRefreshCount: () =>
+        set((state) => ({ refreshCount: state.refreshCount + 1 })),
+      setCanRefresh: (value) => set({ canRefresh: value }),
+      resetSession: () => set(initialState),
+    }),
+    {
+      name: "recipesnap-session",
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        imageUri: state.imageUri,
+        imageBase64: state.imageBase64,
+        manualIngredients: state.manualIngredients,
+        detectedIngredients: state.detectedIngredients,
+        recipes: state.recipes,
+        shownRecipeFingerprints: state.shownRecipeFingerprints,
+        refreshCount: state.refreshCount,
+        maxRefreshes: state.maxRefreshes,
+        canRefresh: state.canRefresh,
+      }),
+    },
+  ),
+);

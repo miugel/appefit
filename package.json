@@ -1,0 +1,47 @@
+{
+  "name": "recipesnap",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "server": "tsx server/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "latest",
+    "cors": "latest",
+    "dotenv": "latest",
+    "express": "latest",
+    "expo": "latest",
+    "expo-constants": "latest",
+    "expo-image-picker": "latest",
+    "expo-linking": "latest",
+    "expo-router": "latest",
+    "expo-status-bar": "latest",
+    "openai": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-native": "latest",
+    "react-native-gesture-handler": "latest",
+    "react-native-reanimated": "latest",
+    "react-native-safe-area-context": "latest",
+    "react-native-screens": "latest",
+    "react-native-web": "latest",
+    "uuid": "latest",
+    "zod": "latest",
+    "zustand": "latest"
+  },
+  "devDependencies": {
+    "@types/cors": "latest",
+    "@types/express": "latest",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/uuid": "latest",
+    "tsx": "latest",
+    "typescript": "latest"
+  }
+}
