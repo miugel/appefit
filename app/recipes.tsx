@@ -1,5 +1,5 @@
 import { Link, router } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -14,10 +14,14 @@ const MAX_REFRESHES_PER_SESSION = 3;
 export default function RecipeResultsScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState("");
-  const recipes = useRecipeStore((state) =>
-    [...state.recipes].sort(
-      (a, b) => a.missingIngredients.length - b.missingIngredients.length,
-    ),
+  const [ingredientsOpen, setIngredientsOpen] = useState(false);
+  const rawRecipes = useRecipeStore((state) => state.recipes);
+  const recipes = useMemo(
+    () =>
+      [...rawRecipes].sort(
+        (a, b) => a.missingIngredients.length - b.missingIngredients.length,
+      ),
+    [rawRecipes],
   );
   const detectedIngredients = useRecipeStore(
     (state) => state.detectedIngredients,
@@ -70,7 +74,7 @@ export default function RecipeResultsScreen() {
       setCanRefresh(result.canRefresh);
       setExhaustionReason(result.reason);
 
-      if (result.recipes.length === 5) {
+      if (result.recipes.length > 0) {
         setRecipes(result.recipes);
         addShownRecipes(result.recipes);
       }
@@ -92,9 +96,14 @@ export default function RecipeResultsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Recipe</Text>
+          <Text style={styles.title}>Recipe ideas</Text>
+          {recipes.length > 0 ? (
+            <Text style={styles.recipeCount}>
+              {recipes.length} quality recipe{recipes.length === 1 ? "" : "s"} found
+            </Text>
+          ) : null}
           <Text style={styles.copy}>
-            Five structured options based on the ingredients detected.
+            Structured options based on the ingredients detected.
           </Text>
         </View>
         <View style={styles.chips}>
@@ -177,6 +186,11 @@ const styles = StyleSheet.create({
   },
   header: {
     gap: 8,
+  },
+  recipeCount: {
+    color: "#71843d",
+    fontSize: 14,
+    fontWeight: "800",
   },
   title: {
     color: "#1f2933",

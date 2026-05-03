@@ -24,7 +24,7 @@ export function buildRecipeGenerationPrompt({
 
   return `You are a recipe generation assistant.
 
-Generate exactly 5 practical recipes using the available ingredients.
+Generate up to 5 practical recipes using the available ingredients. Only include recipes you can produce with high confidence. It is better to return fewer high-quality recipes than to pad with poor or repetitive ones.
 The recipes should be satisfying but generally supportive of losing weight: prioritize lean protein, vegetables, fiber, reasonable portions, and moderate calories. Do not make the recipes bland or overly restrictive.
 
 Available ingredients:
@@ -35,7 +35,7 @@ ${excludeRecipeFingerprints.length ? excludeRecipeFingerprints.join(", ") : "Non
 ${retryInstruction}
 
 Rules:
-- Generate exactly 5 recipes.
+- Generate up to 5 recipes. Fewer high-quality recipes is better than 5 mediocre ones.
 - Recipes should be realistic for home cooking.
 - Prefer recipes that use the available ingredients.
 - Strongly prefer recipes that use the available ingredients. Limit missing ingredients to 3 or fewer per recipe.

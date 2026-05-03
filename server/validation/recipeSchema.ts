@@ -26,7 +26,7 @@ export const RecipeSchema = z.object({
 });
 
 export const GenerateRecipesResponseSchema = z.object({
-  recipes: z.array(RecipeSchema).length(5),
+  recipes: z.array(RecipeSchema).min(1).max(5),
 });
 
 export const IngredientExtractionResponseSchema = z.object({

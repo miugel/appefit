@@ -106,7 +106,7 @@ generateRecipesRouter.post("/", async (request, response) => {
       response.json(
         GenerateRecipesApiResponseSchema.parse({
           detectedIngredients,
-          recipes: [],
+          recipes: uniqueRecipes,
           canRefresh: false,
           reason: "not_enough_unique_recipes",
         }),

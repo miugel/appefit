@@ -111,7 +111,7 @@ function useGenerateRecipes() {
       setCanRefresh(result.canRefresh);
       setExhaustionReason(result.reason);
 
-      if (result.recipes.length === 5) {
+      if (result.recipes.length > 0) {
         setRecipes(result.recipes);
         addShownRecipes(result.recipes);
       }
