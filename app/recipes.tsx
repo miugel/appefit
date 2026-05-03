@@ -97,20 +97,37 @@ export default function RecipeResultsScreen() {
       >
         <View style={styles.header}>
           <Text style={styles.title}>Recipe ideas</Text>
-          {recipes.length > 0 ? (
-            <Text style={styles.recipeCount}>
-              {recipes.length} quality recipe{recipes.length === 1 ? "" : "s"} found
-            </Text>
-          ) : null}
           <Text style={styles.copy}>
-            Structured options based on the ingredients detected.
+            Structured options based on your ingredients.
           </Text>
         </View>
-        <View style={styles.chips}>
-          {detectedIngredients.map((ingredient) => (
-            <IngredientChip key={ingredient} label={ingredient} />
-          ))}
-        </View>
+        {recipes.length > 0 ? (
+          <Text style={styles.recipeCount}>
+            {recipes.length} quality recipe{recipes.length === 1 ? "" : "s"} found
+          </Text>
+        ) : null}
+        {detectedIngredients.length > 0 ? (
+          <View style={styles.ingredientsContainer}>
+            <Pressable
+              onPress={() => setIngredientsOpen((v) => !v)}
+              style={styles.ingredientsToggle}
+            >
+              <Text style={styles.ingredientsToggleText}>
+                {ingredientsOpen ? "Hide" : "Show"} detected ingredients
+              </Text>
+              <Text style={styles.ingredientsChevron}>
+                {ingredientsOpen ? "−" : "+"}
+              </Text>
+            </Pressable>
+            {ingredientsOpen ? (
+              <View style={styles.chips}>
+                {detectedIngredients.map((ingredient) => (
+                  <IngredientChip key={ingredient} label={ingredient} />
+                ))}
+              </View>
+            ) : null}
+          </View>
+        ) : null}
         {exhaustionReason ? (
           <View style={styles.notice}>
             <Text style={styles.noticeText}>
@@ -188,9 +205,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   recipeCount: {
-    color: "#71843d",
+    color: "#1f2933",
     fontSize: 14,
-    fontWeight: "800",
+    fontWeight: "600",
   },
   title: {
     color: "#1f2933",
@@ -203,10 +220,37 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
   },
+  ingredientsContainer: {
+    borderWidth: 1,
+    borderColor: "#d8d3ca",
+    borderRadius: 8,
+    backgroundColor: "#ffffff",
+    overflow: "hidden",
+  },
+  ingredientsToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  ingredientsToggleText: {
+    color: "#52606d",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  ingredientsChevron: {
+    color: "#52606d",
+    fontSize: 18,
+    fontWeight: "700",
+  },
   chips: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#d8d3ca",
+    padding: 14,
   },
   list: {
     gap: 12,

@@ -26,7 +26,7 @@ function useLoadingMessage() {
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((i) => (i + 1) % LOADING_MESSAGES.length);
-    }, 2200);
+    }, 3000);
     return () => clearInterval(interval);
   }, []);
 
@@ -75,8 +75,7 @@ export default function LoadingScreen() {
     <View style={styles.container}>
       <OliveLogo size="lg" />
       <ActivityIndicator color="#71843d" size="large" />
-      <Text style={styles.title}>Building your recipes...</Text>
-      <Text style={styles.copy}>{loadingMessage}</Text>
+      <Text style={styles.title}>{loadingMessage}</Text>
     </View>
   );
 }
