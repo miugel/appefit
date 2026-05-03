@@ -437,7 +437,7 @@ Avoid account/auth/history for MVP.
 
 Keep the API surface small.
 
-### `POST /recipes/generate`
+### `POST /generate-recipe`
 
 Input:
 
@@ -813,7 +813,7 @@ Something went wrong. Check your connection and try again.
 
 ### Milestone 4: Backend
 
-- Create Express `/recipes/generate` route
+- Create Express `/generate-recipe` route
 - Add OpenAI client
 - Add ingredient extraction prompt
 - Add recipe generation prompt

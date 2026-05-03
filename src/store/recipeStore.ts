@@ -21,6 +21,7 @@ type RecipeStore = {
   setManualIngredients: (value: string) => void;
   setDetectedIngredients: (ingredients: string[]) => void;
   setRecipes: (recipes: Recipe[]) => void;
+  startNewGeneration: () => void;
   addShownRecipes: (recipes: Recipe[]) => void;
   incrementRefreshCount: () => void;
   setCanRefresh: (value: boolean) => void;
@@ -54,6 +55,16 @@ export const useRecipeStore = create<RecipeStore>()(
       setDetectedIngredients: (ingredients) =>
         set({ detectedIngredients: ingredients }),
       setRecipes: (recipes) => set({ recipes }),
+      startNewGeneration: () =>
+        set({
+          detectedIngredients: [],
+          recipes: [],
+          shownRecipeFingerprints: [],
+          refreshCount: 0,
+          canRefresh: true,
+          generationError: undefined,
+          exhaustionReason: undefined,
+        }),
       addShownRecipes: (recipes) =>
         set((state) => ({
           shownRecipeFingerprints: Array.from(

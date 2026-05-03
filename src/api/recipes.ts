@@ -17,7 +17,7 @@ export type GenerateRecipesResponse = {
 export async function generateRecipes(
   request: GenerateRecipesRequest,
 ): Promise<GenerateRecipesResponse> {
-  const response = await fetch(`${getApiBaseUrl()}/recipes/generate`, {
+  const response = await fetch(`${getApiBaseUrl()}/generate-recipe`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),

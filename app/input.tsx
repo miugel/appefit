@@ -36,6 +36,7 @@ export default function IngredientInputScreen() {
   const imageUri = useRecipeStore((state) => state.imageUri);
   const setImage = useRecipeStore((state) => state.setImage);
   const clearImage = useRecipeStore((state) => state.clearImage);
+  const startNewGeneration = useRecipeStore((state) => state.startNewGeneration);
 
   useEffect(() => {
     return () => {
@@ -56,6 +57,7 @@ export default function IngredientInputScreen() {
     }
 
     setError("");
+    startNewGeneration();
     router.push("/loading");
   }
 
@@ -285,6 +287,7 @@ export default function IngredientInputScreen() {
           {error ? <Text style={styles.error}>{error}</Text> : null}
         </ScrollView>
         <Button
+          disabled={!manualIngredients.trim() && !imageUri}
           label="Generate Recipes"
           onPress={handleGenerate}
           variant="olive"

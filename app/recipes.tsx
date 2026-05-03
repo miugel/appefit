@@ -1,4 +1,4 @@
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -88,9 +88,9 @@ export default function RecipeResultsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Recipe ideas</Text>
+          <Text style={styles.title}>Recipe</Text>
           <Text style={styles.copy}>
-            Five structured options based on the ingredients from this session.
+            Five structured options based on the ingredients detected.
           </Text>
         </View>
         <View style={styles.chips}>
@@ -112,6 +112,20 @@ export default function RecipeResultsScreen() {
             <Text style={styles.errorText}>{refreshError}</Text>
           </View>
         ) : null}
+        {!recipes.length ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyTitle}>No recipes yet</Text>
+            <Text style={styles.emptyText}>
+              Add more ingredients or try another photo to generate a full
+              recipe set.
+            </Text>
+            <Button
+              label="Back to Ingredients"
+              onPress={() => router.replace("/input")}
+              variant="olive"
+            />
+          </View>
+        ) : null}
         <View style={styles.list}>
           {recipes.map((recipe) => (
             <Link asChild href={`/recipe/${recipe.id}`} key={recipe.id}>
@@ -121,20 +135,26 @@ export default function RecipeResultsScreen() {
             </Link>
           ))}
         </View>
-        <Button
-          disabled={!canRefresh || refreshLimitReached || isRefreshing}
-          label={isRefreshing ? "Refreshing..." : "Refresh for 5 new recipes"}
-          onPress={handleRefresh}
-          variant="olive"
-        />
-        {hasRefreshed ? (
-          <Text style={styles.refreshCountText}>
-            {refreshLimitReached
-              ? "Refresh limit reached for these ingredients."
-              : `${refreshesRemaining} refresh${
-                  refreshesRemaining === 1 ? "" : "es"
-                } left for these ingredients.`}
-          </Text>
+        {recipes.length ? (
+          <>
+            <Button
+              disabled={!canRefresh || refreshLimitReached || isRefreshing}
+              label={
+                isRefreshing ? "Regenerating..." : "Regenerate for 5 new recipes"
+              }
+              onPress={handleRefresh}
+              variant="olive"
+            />
+            {hasRefreshed ? (
+              <Text style={styles.refreshCountText}>
+                {refreshLimitReached
+                  ? "Refresh limit reached for these ingredients."
+                  : `${refreshesRemaining} refresh${
+                      refreshesRemaining === 1 ? "" : "es"
+                    } left for these ingredients.`}
+              </Text>
+            ) : null}
+          </>
         ) : null}
       </ScrollView>
     </SafeAreaView>
@@ -198,6 +218,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     lineHeight: 21,
+  },
+  emptyState: {
+    gap: 12,
+    borderWidth: 1,
+    borderColor: "#d6e4b5",
+    borderRadius: 8,
+    padding: 18,
+    backgroundColor: "#ffffff",
+  },
+  emptyTitle: {
+    color: "#1f2933",
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  emptyText: {
+    color: "#52606d",
+    fontSize: 15,
+    lineHeight: 22,
   },
   refreshCountText: {
     marginTop: -8,

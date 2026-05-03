@@ -28,7 +28,7 @@ const visionModel = process.env.OPENAI_VISION_MODEL ?? textModel;
 
 export const generateRecipesRouter = Router();
 
-generateRecipesRouter.post("/generate", async (request, response) => {
+generateRecipesRouter.post("/", async (request, response) => {
   const parsedRequest = GenerateRecipesRequestSchema.safeParse(request.body);
 
   if (!parsedRequest.success) {

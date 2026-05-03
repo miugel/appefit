@@ -36,7 +36,7 @@ export default function RecipeDetailScreen() {
       >
         <Button
           label="Back to Recipes"
-          onPress={() => router.back()}
+          onPress={() => router.replace("/recipes")}
           variant="olive"
         />
         <View style={styles.header}>
