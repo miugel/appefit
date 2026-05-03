@@ -1,6 +1,8 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import * as ImagePicker from "expo-image-picker";
+import { useEffect, useRef, useState } from "react";
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -14,15 +16,36 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "@/components/Button";
 import { useRecipeStore } from "@/store/recipeStore";
+import { appendTranscript } from "@/utils/voice";
+
+type SpeechModule = typeof import("expo-speech-recognition");
+type SpeechEventSubscription = { remove: () => void };
 
 export default function IngredientInputScreen() {
   const [error, setError] = useState("");
   const [isSecondaryOpen, setIsSecondaryOpen] = useState(false);
+  const [isPickingImage, setIsPickingImage] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [voicePreview, setVoicePreview] = useState("");
+  const speechModuleRef = useRef<SpeechModule | null>(null);
+  const speechSubscriptionsRef = useRef<SpeechEventSubscription[]>([]);
   const manualIngredients = useRecipeStore((state) => state.manualIngredients);
   const setManualIngredients = useRecipeStore(
     (state) => state.setManualIngredients,
   );
   const imageUri = useRecipeStore((state) => state.imageUri);
+  const setImage = useRecipeStore((state) => state.setImage);
+  const clearImage = useRecipeStore((state) => state.clearImage);
+
+  useEffect(() => {
+    return () => {
+      speechSubscriptionsRef.current.forEach((subscription) =>
+        subscription.remove(),
+      );
+      speechSubscriptionsRef.current = [];
+      speechModuleRef.current?.ExpoSpeechRecognitionModule.abort();
+    };
+  }, []);
 
   function handleGenerate() {
     if (!manualIngredients.trim() && !imageUri) {
@@ -34,6 +57,138 @@ export default function IngredientInputScreen() {
 
     setError("");
     router.push("/loading");
+  }
+
+  async function handleTakePhoto() {
+    await pickImage("camera");
+  }
+
+  async function handleUploadPhoto() {
+    await pickImage("library");
+  }
+
+  async function pickImage(source: "camera" | "library") {
+    setError("");
+    setIsPickingImage(true);
+
+    try {
+      const permission =
+        source === "camera"
+          ? await ImagePicker.requestCameraPermissionsAsync()
+          : await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permission.granted) {
+        setError(
+          source === "camera"
+            ? "Camera access is needed to take an ingredient photo."
+            : "Photo library access is needed to upload an ingredient photo.",
+        );
+        return;
+      }
+
+      const result =
+        source === "camera"
+          ? await ImagePicker.launchCameraAsync(imagePickerOptions)
+          : await ImagePicker.launchImageLibraryAsync(imagePickerOptions);
+
+      if (result.canceled) {
+        return;
+      }
+
+      const asset = result.assets[0];
+      setImage(asset.uri, asset.base64 ?? undefined);
+    } catch {
+      setError("We had trouble opening your camera or photo library.");
+    } finally {
+      setIsPickingImage(false);
+    }
+  }
+
+  async function handleToggleDictation() {
+    setError("");
+
+    if (isListening) {
+      speechModuleRef.current?.ExpoSpeechRecognitionModule.stop();
+      return;
+    }
+
+    try {
+      const speechModule = await loadSpeechRecognition();
+      const { ExpoSpeechRecognitionModule } = speechModule;
+
+      if (!ExpoSpeechRecognitionModule.isRecognitionAvailable()) {
+        setError("Speech recognition is not available on this device.");
+        return;
+      }
+
+      const permission =
+        await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+
+      if (!permission.granted) {
+        setError("Microphone and speech recognition permissions are needed.");
+        return;
+      }
+
+      setVoicePreview("");
+      ExpoSpeechRecognitionModule.start({
+        lang: "en-US",
+        interimResults: true,
+        continuous: false,
+      });
+    } catch {
+      setError(
+        "Voice input is unavailable in this build. You can still type ingredients manually.",
+      );
+      setIsListening(false);
+    }
+  }
+
+  async function loadSpeechRecognition() {
+    if (speechModuleRef.current) {
+      return speechModuleRef.current;
+    }
+
+    const speechModule = await import("expo-speech-recognition");
+    speechModuleRef.current = speechModule;
+
+    const { ExpoSpeechRecognitionModule } = speechModule;
+
+    speechSubscriptionsRef.current = [
+      ExpoSpeechRecognitionModule.addListener("start", () => {
+        setIsListening(true);
+      }),
+      ExpoSpeechRecognitionModule.addListener("end", () => {
+        setIsListening(false);
+      }),
+      ExpoSpeechRecognitionModule.addListener("result", (event) => {
+        const transcript = event.results[0]?.transcript?.trim();
+
+        if (!transcript) {
+          return;
+        }
+
+        setVoicePreview(transcript);
+
+        if (event.isFinal) {
+          const currentIngredients =
+            useRecipeStore.getState().manualIngredients;
+          setManualIngredients(appendTranscript(currentIngredients, transcript));
+          setVoicePreview("");
+          setIsSecondaryOpen(true);
+        }
+      }),
+      ExpoSpeechRecognitionModule.addListener("error", (event) => {
+        setIsListening(false);
+
+        if (event.error === "aborted") {
+          return;
+        }
+
+        setError(event.message || "Voice input stopped unexpectedly.");
+      }),
+    ];
+
+    return speechModule;
   }
 
   return (
@@ -54,16 +209,40 @@ export default function IngredientInputScreen() {
             </Text>
           </View>
           <View style={styles.photoButton}>
-            <View style={styles.photoIcon}>
-              <View style={styles.photoLens} />
-            </View>
+            {imageUri ? (
+              <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+            ) : (
+              <View style={styles.photoIcon}>
+                <View style={styles.photoLens} />
+              </View>
+            )}
             <Text style={styles.photoButtonTitle}>Take a Photo</Text>
             <Text style={styles.photoButtonCopy}>
               Fastest way to capture fridge, pantry, or counter ingredients.
             </Text>
-            <Text style={styles.photoButtonMeta}>
-              Photo input arrives in milestone 3
-            </Text>
+            <View style={styles.photoActions}>
+              <Pressable
+                disabled={isPickingImage}
+                onPress={handleTakePhoto}
+                style={styles.photoActionPrimary}
+              >
+                <Text style={styles.photoActionPrimaryText}>
+                  {isPickingImage ? "Opening..." : "Open Camera"}
+                </Text>
+              </Pressable>
+              <Pressable
+                disabled={isPickingImage}
+                onPress={handleUploadPhoto}
+                style={styles.photoActionSecondary}
+              >
+                <Text style={styles.photoActionSecondaryText}>Upload</Text>
+              </Pressable>
+            </View>
+            {imageUri ? (
+              <Pressable onPress={clearImage}>
+                <Text style={styles.removeImageText}>Remove photo</Text>
+              </Pressable>
+            ) : null}
           </View>
           <Pressable
             onPress={() => setIsSecondaryOpen((value) => !value)}
@@ -79,7 +258,14 @@ export default function IngredientInputScreen() {
           </Pressable>
           {isSecondaryOpen ? (
             <View style={styles.secondaryPanel}>
-              <Button label="Tap to Speak" variant="olive" />
+              <Button
+                label={isListening ? "Stop Listening" : "Tap to Speak"}
+                onPress={handleToggleDictation}
+                variant="olive"
+              />
+              {voicePreview ? (
+                <Text style={styles.voicePreview}>{voicePreview}</Text>
+              ) : null}
               <View style={styles.fieldGroup}>
                 <Text style={styles.label}>Manual ingredients</Text>
                 <TextInput
@@ -163,6 +349,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "#d8e7b8",
   },
+  imagePreview: {
+    width: "100%",
+    height: 190,
+    borderRadius: 8,
+    backgroundColor: "#d8e7b8",
+  },
   photoButtonTitle: {
     color: "#26351d",
     fontSize: 22,
@@ -183,6 +375,45 @@ const styles = StyleSheet.create({
     backgroundColor: "#d8e7b8",
     color: "#26351d",
     fontSize: 12,
+    fontWeight: "800",
+  },
+  photoActions: {
+    width: "100%",
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 4,
+  },
+  photoActionPrimary: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 48,
+    borderRadius: 24,
+    backgroundColor: "#71843d",
+  },
+  photoActionPrimaryText: {
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  photoActionSecondary: {
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 96,
+    minHeight: 48,
+    borderWidth: 1,
+    borderColor: "#c8d99a",
+    borderRadius: 24,
+    backgroundColor: "#fbfcf7",
+  },
+  photoActionSecondaryText: {
+    color: "#26351d",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  removeImageText: {
+    color: "#71843d",
+    fontSize: 14,
     fontWeight: "800",
   },
   secondaryPanelHeader: {
@@ -230,6 +461,17 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: "#ffffff",
   },
+  voicePreview: {
+    borderWidth: 1,
+    borderColor: "#c8d99a",
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: "#edf3df",
+    color: "#26351d",
+    fontSize: 15,
+    fontWeight: "700",
+    lineHeight: 22,
+  },
   fieldGroup: {
     gap: 8,
   },
@@ -260,3 +502,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
 });
+
+const imagePickerOptions: ImagePicker.ImagePickerOptions = {
+  allowsEditing: true,
+  aspect: [4, 3],
+  base64: true,
+  mediaTypes: ["images"],
+  quality: 0.72,
+};

@@ -19,5 +19,5 @@ app.get("/health", (_request, response) => {
 app.use("/recipes", generateRecipesRouter);
 
 app.listen(port, () => {
-  console.log(`RecipeSnap server listening on http://localhost:${port}`);
+  console.log(`AppéFit server listening on http://localhost:${port}`);
 });

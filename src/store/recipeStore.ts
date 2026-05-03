@@ -16,6 +16,7 @@ type RecipeStore = {
   maxRefreshes: number;
   canRefresh: boolean;
   setImage: (uri: string, base64?: string) => void;
+  clearImage: () => void;
   setManualIngredients: (value: string) => void;
   setDetectedIngredients: (ingredients: string[]) => void;
   setRecipes: (recipes: Recipe[]) => void;
@@ -42,6 +43,7 @@ export const useRecipeStore = create<RecipeStore>()(
     (set) => ({
       ...initialState,
       setImage: (uri, base64) => set({ imageUri: uri, imageBase64: base64 }),
+      clearImage: () => set({ imageUri: undefined, imageBase64: undefined }),
       setManualIngredients: (value) => set({ manualIngredients: value }),
       setDetectedIngredients: (ingredients) =>
         set({ detectedIngredients: ingredients }),
@@ -61,7 +63,7 @@ export const useRecipeStore = create<RecipeStore>()(
       resetSession: () => set(initialState),
     }),
     {
-      name: "recipesnap-session",
+      name: "appefit-session",
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         imageUri: state.imageUri,

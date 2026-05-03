@@ -1,15 +1,38 @@
 {
   "expo": {
-    "name": "RecipeSnap",
-    "slug": "recipesnap",
-    "scheme": "recipesnap",
+    "name": "AppéFit",
+    "slug": "appefit",
+    "scheme": "appefit",
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow AppéFit to scan ingredients with your camera.",
+          "photosPermission": "Allow AppéFit to choose ingredient photos from your library."
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow AppéFit to use your microphone for ingredient dictation.",
+          "speechRecognitionPermission": "Allow AppéFit to recognize dictated ingredients."
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true
+    },
+    "ios": {
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "Allow AppéFit to recognize dictated ingredients.",
+        "NSMicrophoneUsageDescription": "Allow AppéFit to use your microphone for ingredient dictation."
+      },
+      "bundleIdentifier": "com.anonymous.appefit"
     }
   }
 }

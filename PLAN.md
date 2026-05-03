@@ -1,4 +1,4 @@
-# RecipeSnap MVP Implementation Plan
+# AppéFit MVP Implementation Plan
 
 ## Product Goal
 
