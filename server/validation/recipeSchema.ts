@@ -29,4 +29,38 @@ export const GenerateRecipesResponseSchema = z.object({
   recipes: z.array(RecipeSchema).length(5),
 });
 
+export const IngredientExtractionResponseSchema = z.object({
+  ingredients: z.array(
+    z.object({
+      name: z.string().min(1),
+      confidence: z.number().min(0).max(1).optional(),
+    }),
+  ),
+});
+
+export const GenerateRecipesRequestSchema = z
+  .object({
+    imageBase64: z.string().optional(),
+    manualIngredients: z.string().optional(),
+    excludeRecipeFingerprints: z.array(z.string()).default([]),
+    refreshCount: z.number().int().nonnegative().default(0),
+    maxRefreshes: z.number().int().positive().default(3),
+  })
+  .refine(
+    (value) => Boolean(value.imageBase64?.trim() || value.manualIngredients?.trim()),
+    "imageBase64 or manualIngredients is required",
+  );
+
+export const GenerateRecipesApiResponseSchema = z.object({
+  detectedIngredients: z.array(z.string()),
+  recipes: z.array(RecipeSchema),
+  canRefresh: z.boolean(),
+  reason: z
+    .enum(["max_refreshes_reached", "not_enough_unique_recipes"])
+    .optional(),
+});
+
 export type ServerRecipe = z.infer<typeof RecipeSchema>;
+export type GenerateRecipesRequest = z.infer<
+  typeof GenerateRecipesRequestSchema
+>;
