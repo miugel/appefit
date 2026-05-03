@@ -14,7 +14,11 @@ const MAX_REFRESHES_PER_SESSION = 3;
 export default function RecipeResultsScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState("");
-  const recipes = useRecipeStore((state) => state.recipes);
+  const recipes = useRecipeStore((state) =>
+    [...state.recipes].sort(
+      (a, b) => a.missingIngredients.length - b.missingIngredients.length,
+    ),
+  );
   const detectedIngredients = useRecipeStore(
     (state) => state.detectedIngredients,
   );
@@ -140,7 +144,7 @@ export default function RecipeResultsScreen() {
             <Button
               disabled={!canRefresh || refreshLimitReached || isRefreshing}
               label={
-                isRefreshing ? "Regenerating..." : "Regenerate for 5 new recipes"
+                isRefreshing ? "Regenerating..." : "Regenerate for new recipes"
               }
               onPress={handleRefresh}
               variant="olive"

@@ -1,15 +1,43 @@
 import { router } from "expo-router";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
+import { OliveLogo } from "@/components/OliveLogo";
 import { generateRecipes } from "@/api/recipes";
 import { useRecipeStore } from "@/store/recipeStore";
+
+const LOADING_MESSAGES = [
+  "Raiding your virtual pantry...",
+  "Negotiating with the AI chef...",
+  "Making sure it doesn't taste like cardboard...",
+  "Cross-referencing flavor science...",
+  "Consulting the ghost of Julia Child...",
+  "Calculating optimal snack potential...",
+  "Checking if that's actually a food...",
+  "Converting measurements to vibes...",
+  "Plotting your culinary redemption arc...",
+  "Pretending we have a Michelin star...",
+];
+
+function useLoadingMessage() {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex((i) => (i + 1) % LOADING_MESSAGES.length);
+    }, 2200);
+    return () => clearInterval(interval);
+  }, []);
+
+  return LOADING_MESSAGES[index];
+}
 
 export default function LoadingScreen() {
   const generationError = useRecipeStore((state) => state.generationError);
   const runGeneration = useGenerateRecipes();
   const hasStartedGeneration = useRef(false);
+  const loadingMessage = useLoadingMessage();
 
   useEffect(() => {
     if (hasStartedGeneration.current) {
@@ -45,10 +73,10 @@ export default function LoadingScreen() {
 
   return (
     <View style={styles.container}>
+      <OliveLogo size="lg" />
       <ActivityIndicator color="#71843d" size="large" />
-      <Text style={styles.title}>Analyzing ingredients...</Text>
-      <Text style={styles.copy}>Building healthy recipe ideas...</Text>
-      <Text style={styles.copy}>Checking for duplicates...</Text>
+      <Text style={styles.title}>Building your recipes...</Text>
+      <Text style={styles.copy}>{loadingMessage}</Text>
     </View>
   );
 }

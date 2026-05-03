@@ -38,6 +38,7 @@ Rules:
 - Generate exactly 5 recipes.
 - Recipes should be realistic for home cooking.
 - Prefer recipes that use the available ingredients.
+- Strongly prefer recipes that use the available ingredients. Limit missing ingredients to 3 or fewer per recipe.
 - Missing ingredients should be common pantry or grocery items.
 - Do not repeat recipe concepts.
 - Steps should be clear, ordered, and concise.

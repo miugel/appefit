@@ -3,18 +3,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
+import { OliveLogo } from "@/components/OliveLogo";
 
 export default function GetStartedScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <View style={styles.logoMark}>
-          <View style={styles.oliveStem} />
-          <View style={styles.oliveLeaf} />
-          <View style={styles.oliveBody}>
-            <View style={styles.oliveHighlight} />
-          </View>
-        </View>
+        <OliveLogo size="lg" />
         <Text style={styles.title}>AppéFit</Text>
         <Text style={styles.copy}>
           Turn the ingredients you have into healthy recipes you actually want
@@ -42,53 +37,6 @@ const styles = StyleSheet.create({
     gap: 18,
     marginTop: "auto",
     marginBottom: "auto",
-  },
-  logoMark: {
-    width: 108,
-    height: 108,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 54,
-    backgroundColor: "#edf3df",
-  },
-  oliveStem: {
-    position: "absolute",
-    top: 20,
-    width: 4,
-    height: 22,
-    borderRadius: 2,
-    backgroundColor: "#566a2f",
-    transform: [{ rotate: "18deg" }],
-  },
-  oliveLeaf: {
-    position: "absolute",
-    top: 24,
-    right: 28,
-    width: 31,
-    height: 17,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 4,
-    borderBottomLeftRadius: 4,
-    borderBottomRightRadius: 18,
-    backgroundColor: "#9db46e",
-    transform: [{ rotate: "-28deg" }],
-  },
-  oliveBody: {
-    width: 54,
-    height: 66,
-    alignItems: "flex-start",
-    borderRadius: 28,
-    backgroundColor: "#71843d",
-    transform: [{ rotate: "-8deg" }],
-  },
-  oliveHighlight: {
-    width: 14,
-    height: 24,
-    marginTop: 13,
-    marginLeft: 13,
-    borderRadius: 10,
-    backgroundColor: "#a9ba78",
-    opacity: 0.85,
   },
   title: {
     color: "#1f2933",

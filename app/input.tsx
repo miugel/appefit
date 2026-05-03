@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "@/components/Button";
+import { OliveLogo } from "@/components/OliveLogo";
 import { useRecipeStore } from "@/store/recipeStore";
 import { appendTranscript } from "@/utils/voice";
 
@@ -204,6 +205,7 @@ export default function IngredientInputScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.header}>
+            <OliveLogo size="sm" />
             <Text style={styles.title}>Add your ingredients</Text>
             <Text style={styles.copy}>
               Snap what you have and AppéFit will turn it into five healthy
