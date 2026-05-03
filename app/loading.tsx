@@ -1,27 +1,34 @@
 import { router } from "expo-router";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
-import { mockDetectedIngredients, mockRecipes } from "@/data/mockRecipes";
+import { Button } from "@/components/Button";
+import { generateRecipes } from "@/api/recipes";
 import { useRecipeStore } from "@/store/recipeStore";
 
 export default function LoadingScreen() {
-  const setDetectedIngredients = useRecipeStore(
-    (state) => state.setDetectedIngredients,
-  );
-  const setRecipes = useRecipeStore((state) => state.setRecipes);
-  const addShownRecipes = useRecipeStore((state) => state.addShownRecipes);
+  const generationError = useRecipeStore((state) => state.generationError);
+  const runGeneration = useGenerateRecipes();
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      setDetectedIngredients(mockDetectedIngredients);
-      setRecipes(mockRecipes);
-      addShownRecipes(mockRecipes);
-      router.replace("/recipes");
-    }, 1200);
+    runGeneration();
+  }, [runGeneration]);
 
-    return () => clearTimeout(timeout);
-  }, [addShownRecipes, setDetectedIngredients, setRecipes]);
+  if (generationError) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Could not generate recipes</Text>
+        <Text style={styles.copy}>{generationError}</Text>
+        <Button label="Try Again" onPress={runGeneration} variant="olive" />
+        <Button
+          label="Back to Ingredients"
+          onPress={() => router.replace("/input")}
+          variant="secondary"
+          style={styles.secondaryAction}
+        />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -31,6 +38,54 @@ export default function LoadingScreen() {
       <Text style={styles.copy}>Checking for duplicates...</Text>
     </View>
   );
+}
+
+function useGenerateRecipes() {
+  return useCallback(async () => {
+    const {
+      imageBase64,
+      manualIngredients,
+      shownRecipeFingerprints,
+      refreshCount,
+      maxRefreshes,
+      setDetectedIngredients,
+      setRecipes,
+      addShownRecipes,
+      setCanRefresh,
+      setGenerationError,
+      setExhaustionReason,
+    } = useRecipeStore.getState();
+
+    setGenerationError(undefined);
+    setExhaustionReason(undefined);
+
+    try {
+      const result = await generateRecipes({
+        imageBase64,
+        manualIngredients,
+        excludeRecipeFingerprints: shownRecipeFingerprints,
+        refreshCount,
+        maxRefreshes,
+      });
+
+      setDetectedIngredients(result.detectedIngredients);
+      setCanRefresh(result.canRefresh);
+      setExhaustionReason(result.reason);
+
+      if (result.recipes.length === 5) {
+        setRecipes(result.recipes);
+        addShownRecipes(result.recipes);
+      }
+
+      router.replace("/recipes");
+    } catch (error) {
+      setGenerationError(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong. Check your connection and try again.",
+      );
+    }
+  }, []);
 }
 
 const styles = StyleSheet.create({
@@ -50,5 +105,10 @@ const styles = StyleSheet.create({
   copy: {
     color: "#52606d",
     fontSize: 16,
+    lineHeight: 24,
+    textAlign: "center",
+  },
+  secondaryAction: {
+    marginTop: 2,
   },
 });

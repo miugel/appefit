@@ -15,6 +15,8 @@ type RecipeStore = {
   refreshCount: number;
   maxRefreshes: number;
   canRefresh: boolean;
+  generationError?: string;
+  exhaustionReason?: "max_refreshes_reached" | "not_enough_unique_recipes";
   setImage: (uri: string, base64?: string) => void;
   clearImage: () => void;
   setManualIngredients: (value: string) => void;
@@ -23,6 +25,10 @@ type RecipeStore = {
   addShownRecipes: (recipes: Recipe[]) => void;
   incrementRefreshCount: () => void;
   setCanRefresh: (value: boolean) => void;
+  setGenerationError: (message?: string) => void;
+  setExhaustionReason: (
+    reason?: "max_refreshes_reached" | "not_enough_unique_recipes",
+  ) => void;
   resetSession: () => void;
 };
 
@@ -36,6 +42,8 @@ const initialState = {
   refreshCount: 0,
   maxRefreshes: 3,
   canRefresh: true,
+  generationError: undefined,
+  exhaustionReason: undefined,
 };
 
 export const useRecipeStore = create<RecipeStore>()(
@@ -60,6 +68,8 @@ export const useRecipeStore = create<RecipeStore>()(
       incrementRefreshCount: () =>
         set((state) => ({ refreshCount: state.refreshCount + 1 })),
       setCanRefresh: (value) => set({ canRefresh: value }),
+      setGenerationError: (message) => set({ generationError: message }),
+      setExhaustionReason: (reason) => set({ exhaustionReason: reason }),
       resetSession: () => set(initialState),
     }),
     {
@@ -75,6 +85,8 @@ export const useRecipeStore = create<RecipeStore>()(
         refreshCount: state.refreshCount,
         maxRefreshes: state.maxRefreshes,
         canRefresh: state.canRefresh,
+        generationError: state.generationError,
+        exhaustionReason: state.exhaustionReason,
       }),
     },
   ),

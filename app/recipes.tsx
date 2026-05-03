@@ -12,6 +12,8 @@ export default function RecipeResultsScreen() {
   const detectedIngredients = useRecipeStore(
     (state) => state.detectedIngredients,
   );
+  const canRefresh = useRecipeStore((state) => state.canRefresh);
+  const exhaustionReason = useRecipeStore((state) => state.exhaustionReason);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -30,6 +32,15 @@ export default function RecipeResultsScreen() {
             <IngredientChip key={ingredient} label={ingredient} />
           ))}
         </View>
+        {exhaustionReason ? (
+          <View style={styles.notice}>
+            <Text style={styles.noticeText}>
+              {exhaustionReason === "max_refreshes_reached"
+                ? "You have reached the refresh limit for these ingredients. Add more ingredients or start a new scan for more ideas."
+                : "We could not find enough new recipes with these ingredients. Try adding more ingredients or starting a new scan."}
+            </Text>
+          </View>
+        ) : null}
         <View style={styles.list}>
           {recipes.map((recipe) => (
             <Link asChild href={`/recipe/${recipe.id}`} key={recipe.id}>
@@ -39,7 +50,11 @@ export default function RecipeResultsScreen() {
             </Link>
           ))}
         </View>
-        <Button label="Refresh for 5 new recipes" variant="olive" />
+        <Button
+          disabled={!canRefresh}
+          label="Refresh for 5 new recipes"
+          variant="olive"
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -76,5 +91,18 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: 12,
+  },
+  notice: {
+    borderWidth: 1,
+    borderColor: "#d6e4b5",
+    borderRadius: 8,
+    padding: 14,
+    backgroundColor: "#edf3df",
+  },
+  noticeText: {
+    color: "#52606d",
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 21,
   },
 });
