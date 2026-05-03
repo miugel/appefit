@@ -1,75 +1,80 @@
 import { Link } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
+import { Button } from "@/components/Button";
+import { IngredientChip } from "@/components/IngredientChip";
+import { RecipeCard } from "@/components/RecipeCard";
 import { useRecipeStore } from "@/store/recipeStore";
 
 export default function RecipeResultsScreen() {
   const recipes = useRecipeStore((state) => state.recipes);
+  const detectedIngredients = useRecipeStore(
+    (state) => state.detectedIngredients,
+  );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Recipe ideas</Text>
-      <View style={styles.list}>
-        {recipes.map((recipe) => (
-          <Link asChild href={`/recipe/${recipe.id}`} key={recipe.id}>
-            <Pressable style={styles.card}>
-              <Text style={styles.cardTitle}>{recipe.title}</Text>
-              <Text style={styles.cardCopy}>{recipe.description}</Text>
-            </Pressable>
-          </Link>
-        ))}
-      </View>
-      <Pressable style={styles.button}>
-        <Text style={styles.buttonText}>Refresh for 5 new recipes</Text>
-      </Pressable>
-    </View>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Recipe ideas</Text>
+          <Text style={styles.copy}>
+            Five structured options based on the ingredients from this session.
+          </Text>
+        </View>
+        <View style={styles.chips}>
+          {detectedIngredients.map((ingredient) => (
+            <IngredientChip key={ingredient} label={ingredient} />
+          ))}
+        </View>
+        <View style={styles.list}>
+          {recipes.map((recipe) => (
+            <Link asChild href={`/recipe/${recipe.id}`} key={recipe.id}>
+              <Pressable>
+                <RecipeCard recipe={recipe} />
+              </Pressable>
+            </Link>
+          ))}
+        </View>
+        <Button label="Refresh for 5 new recipes" variant="olive" />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
+    backgroundColor: "#f8f7f4",
+  },
+  container: {
     gap: 20,
     padding: 24,
-    paddingTop: 72,
-    backgroundColor: "#f8f7f4",
+    paddingBottom: 32,
+  },
+  header: {
+    gap: 8,
   },
   title: {
     color: "#1f2933",
     fontSize: 30,
-    fontWeight: "700",
+    fontWeight: "800",
+    letterSpacing: 0,
+  },
+  copy: {
+    color: "#52606d",
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  chips: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
   },
   list: {
     gap: 12,
-  },
-  card: {
-    gap: 8,
-    borderWidth: 1,
-    borderColor: "#e0d9cf",
-    borderRadius: 22,
-    padding: 18,
-    backgroundColor: "#ffffff",
-  },
-  cardTitle: {
-    color: "#1f2933",
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  cardCopy: {
-    color: "#52606d",
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  button: {
-    alignItems: "center",
-    marginTop: "auto",
-    borderRadius: 28,
-    paddingVertical: 18,
-    backgroundColor: "#1f2933",
-  },
-  buttonText: {
-    color: "#ffffff",
-    fontSize: 17,
-    fontWeight: "700",
   },
 });
