@@ -44,7 +44,6 @@ export const GenerateRecipesRequestSchema = z
     manualIngredients: z.string().optional(),
     excludeRecipeFingerprints: z.array(z.string()).default([]),
     refreshCount: z.number().int().nonnegative().default(0),
-    maxRefreshes: z.number().int().positive().default(3),
   })
   .refine(
     (value) => Boolean(value.imageBase64?.trim() || value.manualIngredients?.trim()),

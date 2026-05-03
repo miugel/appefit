@@ -13,7 +13,6 @@ type RecipeStore = {
   recipes: Recipe[];
   shownRecipeFingerprints: string[];
   refreshCount: number;
-  maxRefreshes: number;
   canRefresh: boolean;
   generationError?: string;
   exhaustionReason?: "max_refreshes_reached" | "not_enough_unique_recipes";
@@ -40,7 +39,6 @@ const initialState = {
   recipes: [],
   shownRecipeFingerprints: [],
   refreshCount: 0,
-  maxRefreshes: 3,
   canRefresh: true,
   generationError: undefined,
   exhaustionReason: undefined,
@@ -83,7 +81,6 @@ export const useRecipeStore = create<RecipeStore>()(
         recipes: state.recipes,
         shownRecipeFingerprints: state.shownRecipeFingerprints,
         refreshCount: state.refreshCount,
-        maxRefreshes: state.maxRefreshes,
         canRefresh: state.canRefresh,
         generationError: state.generationError,
         exhaustionReason: state.exhaustionReason,

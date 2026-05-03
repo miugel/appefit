@@ -47,7 +47,6 @@ function useGenerateRecipes() {
       manualIngredients,
       shownRecipeFingerprints,
       refreshCount,
-      maxRefreshes,
       setDetectedIngredients,
       setRecipes,
       addShownRecipes,
@@ -65,7 +64,6 @@ function useGenerateRecipes() {
         manualIngredients,
         excludeRecipeFingerprints: shownRecipeFingerprints,
         refreshCount,
-        maxRefreshes,
       });
 
       setDetectedIngredients(result.detectedIngredients);

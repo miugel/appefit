@@ -20,6 +20,7 @@ import {
 } from "../validation/recipeSchema";
 
 const MAX_GENERATION_RETRIES = 2;
+const MAX_REFRESHES_PER_SESSION = 3;
 const IMAGE_CONFIDENCE_THRESHOLD = 0.45;
 
 const textModel = process.env.OPENAI_TEXT_MODEL ?? "gpt-5.4-mini";
@@ -40,7 +41,7 @@ generateRecipesRouter.post("/generate", async (request, response) => {
 
   const input = parsedRequest.data;
 
-  if (input.refreshCount >= input.maxRefreshes) {
+  if (input.refreshCount > MAX_REFRESHES_PER_SESSION) {
     response.json(
       GenerateRecipesApiResponseSchema.parse({
         detectedIngredients: normalizeIngredients([input.manualIngredients ?? ""]),
@@ -117,9 +118,9 @@ generateRecipesRouter.post("/generate", async (request, response) => {
       GenerateRecipesApiResponseSchema.parse({
         detectedIngredients,
         recipes: uniqueRecipes,
-        canRefresh: input.refreshCount + 1 < input.maxRefreshes,
+        canRefresh: input.refreshCount < MAX_REFRESHES_PER_SESSION,
         reason:
-          input.refreshCount + 1 >= input.maxRefreshes
+          input.refreshCount >= MAX_REFRESHES_PER_SESSION
             ? "max_refreshes_reached"
             : undefined,
       }),

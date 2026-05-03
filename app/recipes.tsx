@@ -1,19 +1,85 @@
 import { Link } from "expo-router";
+import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "@/components/Button";
+import { generateRecipes } from "@/api/recipes";
 import { IngredientChip } from "@/components/IngredientChip";
 import { RecipeCard } from "@/components/RecipeCard";
 import { useRecipeStore } from "@/store/recipeStore";
 
+const MAX_REFRESHES_PER_SESSION = 3;
+
 export default function RecipeResultsScreen() {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState("");
   const recipes = useRecipeStore((state) => state.recipes);
   const detectedIngredients = useRecipeStore(
     (state) => state.detectedIngredients,
   );
   const canRefresh = useRecipeStore((state) => state.canRefresh);
   const exhaustionReason = useRecipeStore((state) => state.exhaustionReason);
+  const refreshCount = useRecipeStore((state) => state.refreshCount);
+  const hasRefreshed = refreshCount > 0;
+  const refreshLimitReached = refreshCount >= MAX_REFRESHES_PER_SESSION;
+  const refreshesRemaining = Math.max(
+    MAX_REFRESHES_PER_SESSION - refreshCount,
+    0,
+  );
+
+  async function handleRefresh() {
+    if (!canRefresh || refreshLimitReached || isRefreshing) {
+      return;
+    }
+
+    setIsRefreshing(true);
+    setRefreshError("");
+
+    const {
+      imageBase64,
+      manualIngredients,
+      shownRecipeFingerprints,
+      refreshCount: currentRefreshCount,
+      setDetectedIngredients,
+      setRecipes,
+      addShownRecipes,
+      incrementRefreshCount,
+      setCanRefresh,
+      setExhaustionReason,
+    } = useRecipeStore.getState();
+
+    const nextRefreshCount = currentRefreshCount + 1;
+
+    incrementRefreshCount();
+    setExhaustionReason(undefined);
+
+    try {
+      const result = await generateRecipes({
+        imageBase64,
+        manualIngredients,
+        excludeRecipeFingerprints: shownRecipeFingerprints,
+        refreshCount: nextRefreshCount,
+      });
+
+      setDetectedIngredients(result.detectedIngredients);
+      setCanRefresh(result.canRefresh);
+      setExhaustionReason(result.reason);
+
+      if (result.recipes.length === 5) {
+        setRecipes(result.recipes);
+        addShownRecipes(result.recipes);
+      }
+    } catch (error) {
+      setRefreshError(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong. Check your connection and try again.",
+      );
+    } finally {
+      setIsRefreshing(false);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -41,6 +107,11 @@ export default function RecipeResultsScreen() {
             </Text>
           </View>
         ) : null}
+        {refreshError ? (
+          <View style={styles.errorNotice}>
+            <Text style={styles.errorText}>{refreshError}</Text>
+          </View>
+        ) : null}
         <View style={styles.list}>
           {recipes.map((recipe) => (
             <Link asChild href={`/recipe/${recipe.id}`} key={recipe.id}>
@@ -51,10 +122,20 @@ export default function RecipeResultsScreen() {
           ))}
         </View>
         <Button
-          disabled={!canRefresh}
-          label="Refresh for 5 new recipes"
+          disabled={!canRefresh || refreshLimitReached || isRefreshing}
+          label={isRefreshing ? "Refreshing..." : "Refresh for 5 new recipes"}
+          onPress={handleRefresh}
           variant="olive"
         />
+        {hasRefreshed ? (
+          <Text style={styles.refreshCountText}>
+            {refreshLimitReached
+              ? "Refresh limit reached for these ingredients."
+              : `${refreshesRemaining} refresh${
+                  refreshesRemaining === 1 ? "" : "es"
+                } left for these ingredients.`}
+          </Text>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -104,5 +185,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     lineHeight: 21,
+  },
+  errorNotice: {
+    borderWidth: 1,
+    borderColor: "#f4b8a8",
+    borderRadius: 8,
+    padding: 14,
+    backgroundColor: "#fff4ef",
+  },
+  errorText: {
+    color: "#9f3412",
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 21,
+  },
+  refreshCountText: {
+    marginTop: -8,
+    color: "#52606d",
+    fontSize: 13,
+    fontWeight: "700",
+    lineHeight: 19,
+    textAlign: "center",
   },
 });

@@ -5,7 +5,6 @@ export type GenerateRecipesRequest = {
   manualIngredients?: string;
   excludeRecipeFingerprints: string[];
   refreshCount: number;
-  maxRefreshes: number;
 };
 
 export type GenerateRecipesResponse = {
