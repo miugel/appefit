@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
   Image,
   KeyboardAvoidingView,
@@ -17,19 +17,18 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "@/components/Button";
 import { OliveLogo } from "@/components/OliveLogo";
 import { useRecipeStore } from "@/store/recipeStore";
-import { appendTranscript } from "@/utils/voice";
 
-type SpeechModule = typeof import("expo-speech-recognition");
-type SpeechEventSubscription = { remove: () => void };
+// type SpeechModule = typeof import("expo-speech-recognition");
+// type SpeechEventSubscription = { remove: () => void };
 
 export default function IngredientInputScreen() {
   const [error, setError] = useState("");
   const [isSecondaryOpen, setIsSecondaryOpen] = useState(false);
   const [isPickingImage, setIsPickingImage] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [voicePreview, setVoicePreview] = useState("");
-  const speechModuleRef = useRef<SpeechModule | null>(null);
-  const speechSubscriptionsRef = useRef<SpeechEventSubscription[]>([]);
+  // const [isListening, setIsListening] = useState(false);
+  // const [voicePreview, setVoicePreview] = useState("");
+  // const speechModuleRef = useRef<SpeechModule | null>(null);
+  // const speechSubscriptionsRef = useRef<SpeechEventSubscription[]>([]);
   const manualIngredients = useRecipeStore((state) => state.manualIngredients);
   const setManualIngredients = useRecipeStore(
     (state) => state.setManualIngredients,
@@ -39,16 +38,6 @@ export default function IngredientInputScreen() {
   const clearImage = useRecipeStore((state) => state.clearImage);
   const startNewGeneration = useRecipeStore((state) => state.startNewGeneration);
   const recipeBatches = useRecipeStore((state) => state.recipeBatches);
-
-  useEffect(() => {
-    return () => {
-      speechSubscriptionsRef.current.forEach((subscription) =>
-        subscription.remove(),
-      );
-      speechSubscriptionsRef.current = [];
-      speechModuleRef.current?.ExpoSpeechRecognitionModule.abort();
-    };
-  }, []);
 
   function handleGenerate() {
     if (!manualIngredients.trim() && !imageUri) {
@@ -108,92 +97,8 @@ export default function IngredientInputScreen() {
     }
   }
 
-  async function handleToggleDictation() {
-    setError("");
-
-    if (isListening) {
-      speechModuleRef.current?.ExpoSpeechRecognitionModule.stop();
-      return;
-    }
-
-    try {
-      const speechModule = await loadSpeechRecognition();
-      const { ExpoSpeechRecognitionModule } = speechModule;
-
-      if (!ExpoSpeechRecognitionModule.isRecognitionAvailable()) {
-        setError("Speech recognition is not available on this device.");
-        return;
-      }
-
-      const permission =
-        await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-
-      if (!permission.granted) {
-        setError("Microphone and speech recognition permissions are needed.");
-        return;
-      }
-
-      setVoicePreview("");
-      ExpoSpeechRecognitionModule.start({
-        lang: "en-US",
-        interimResults: true,
-        continuous: false,
-      });
-    } catch {
-      setError(
-        "Voice input is unavailable in this build. You can still type ingredients manually.",
-      );
-      setIsListening(false);
-    }
-  }
-
-  async function loadSpeechRecognition() {
-    if (speechModuleRef.current) {
-      return speechModuleRef.current;
-    }
-
-    const speechModule = await import("expo-speech-recognition");
-    speechModuleRef.current = speechModule;
-
-    const { ExpoSpeechRecognitionModule } = speechModule;
-
-    speechSubscriptionsRef.current = [
-      ExpoSpeechRecognitionModule.addListener("start", () => {
-        setIsListening(true);
-      }),
-      ExpoSpeechRecognitionModule.addListener("end", () => {
-        setIsListening(false);
-      }),
-      ExpoSpeechRecognitionModule.addListener("result", (event) => {
-        const transcript = event.results[0]?.transcript?.trim();
-
-        if (!transcript) {
-          return;
-        }
-
-        setVoicePreview(transcript);
-
-        if (event.isFinal) {
-          const currentIngredients =
-            useRecipeStore.getState().manualIngredients;
-          setManualIngredients(appendTranscript(currentIngredients, transcript));
-          setVoicePreview("");
-          setIsSecondaryOpen(true);
-        }
-      }),
-      ExpoSpeechRecognitionModule.addListener("error", (event) => {
-        setIsListening(false);
-
-        if (event.error === "aborted") {
-          return;
-        }
-
-        setError(event.message || "Voice input stopped unexpectedly.");
-      }),
-    ];
-
-    return speechModule;
-  }
+  // async function handleToggleDictation() { ... }
+  // async function loadSpeechRecognition() { ... }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -266,21 +171,22 @@ export default function IngredientInputScreen() {
             <View style={styles.secondaryHeaderText}>
               <Text style={styles.secondaryPanelTitle}>Other ways to add</Text>
               <Text style={styles.secondaryPanelCopy}>
-                Dictate or type ingredients instead.
+                {/* Dictate or type ingredients instead. */}
+                Type ingredients instead.
               </Text>
             </View>
             <Text style={styles.chevron}>{isSecondaryOpen ? "−" : "+"}</Text>
           </Pressable>
           {isSecondaryOpen ? (
             <View style={styles.secondaryPanel}>
-              <Button
+              {/* <Button
                 label={isListening ? "Stop Listening" : "Tap to Speak"}
                 onPress={handleToggleDictation}
                 variant="olive"
               />
               {voicePreview ? (
                 <Text style={styles.voicePreview}>{voicePreview}</Text>
-              ) : null}
+              ) : null} */}
               <View style={styles.fieldGroup}>
                 <Text style={styles.label}>Manual ingredients</Text>
                 <TextInput
