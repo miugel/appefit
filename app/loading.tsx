@@ -8,16 +8,16 @@ import { generateRecipes } from "@/api/recipes";
 import { useRecipeStore } from "@/store/recipeStore";
 
 const LOADING_MESSAGES = [
-  "Raiding your virtual pantry...",
-  "Negotiating with the AI chef...",
-  "Making sure it doesn't taste like cardboard...",
-  "Cross-referencing flavor science...",
-  "Consulting the ghost of Julia Child...",
-  "Calculating optimal snack potential...",
-  "Checking if that's actually a food...",
-  "Converting measurements to vibes...",
-  "Plotting your culinary redemption arc...",
-  "Pretending we have a Michelin star...",
+  "Counting macros with unreasonable confidence...",
+  "Finding the protein angle...",
+  "Keeping calories honest...",
+  "Turning fridge chaos into gains...",
+  "Making the cut taste less sad...",
+  "Checking if this meal lifts...",
+  "Balancing flavor and protein...",
+  "Dodging empty calories...",
+  "Assembling a plate with gym energy...",
+  "Convincing vegetables to join the bulk...",
 ];
 
 function randomIndex(exclude: number) {
@@ -75,7 +75,7 @@ export default function LoadingScreen() {
         <Text style={styles.copy}>{generationError}</Text>
         <Button
           label="Try Again"
-          onPress={() => router.replace("/input")}
+          onPress={handleBackToIngredients}
           variant="olive"
         />
       </View>
@@ -88,6 +88,17 @@ export default function LoadingScreen() {
       <Animated.Text style={[styles.message, { opacity }]}>{message}</Animated.Text>
     </View>
   );
+}
+
+function handleBackToIngredients() {
+  useRecipeStore.getState().setGenerationError(undefined);
+
+  if (router.canGoBack()) {
+    router.back();
+    return;
+  }
+
+  router.replace("/input");
 }
 
 function useGenerateRecipes() {
