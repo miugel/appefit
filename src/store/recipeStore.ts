@@ -26,6 +26,7 @@ type RecipeStore = {
   setCorrectionContext: (value: string) => void;
   setDetectedIngredients: (ingredients: string[]) => void;
   addBatch: (recipes: Recipe[]) => void;
+  replaceBatch: (recipes: Recipe[]) => void;
   goToNextBatch: () => void;
   goToPreviousBatch: () => void;
   addShownRecipes: (recipes: Recipe[]) => void;
@@ -88,6 +89,12 @@ export const useRecipeStore = create<RecipeStore>()(
         set((state) => ({
           recipeBatches: [...state.recipeBatches, recipes],
           currentBatchIndex: state.recipeBatches.length,
+        })),
+      replaceBatch: (recipes) =>
+        set((state) => ({
+          recipeBatches: state.recipeBatches.map((batch, i) =>
+            i === state.currentBatchIndex ? recipes : batch,
+          ),
         })),
       goToNextBatch: () =>
         set((state) => ({

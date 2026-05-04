@@ -1,6 +1,7 @@
 import { Link, router } from "expo-router";
 import { useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -19,7 +20,7 @@ import { useRecipeStore } from "@/store/recipeStore";
 const MAX_REFRESHES_PER_SESSION = 3;
 
 export default function RecipeResultsScreen() {
-  const [ingredientsOpen, setIngredientsOpen] = useState(true);
+  const [ingredientsOpen, setIngredientsOpen] = useState(false);
   const [fixOpen, setFixOpen] = useState(false);
   const [fixError, setFixError] = useState<string | undefined>();
   const [isFixing, setIsFixing] = useState(false);
@@ -78,10 +79,9 @@ export default function RecipeResultsScreen() {
       imageBase64s,
       manualIngredients,
       shownRecipeFingerprints,
-      refreshCount: currentRefreshCount,
       setCorrectionContext,
       setDetectedIngredients,
-      addBatch,
+      replaceBatch,
       addShownRecipes,
       setCanRefresh,
       setExhaustionReason,
@@ -97,7 +97,7 @@ export default function RecipeResultsScreen() {
         manualIngredients,
         correctionContext: trimmedFix,
         excludeRecipeFingerprints: shownRecipeFingerprints,
-        refreshCount: currentRefreshCount,
+        refreshCount: 0,
       });
 
       setDetectedIngredients(result.detectedIngredients);
@@ -105,8 +105,11 @@ export default function RecipeResultsScreen() {
       setExhaustionReason(result.reason);
 
       if (result.recipes.length > 0) {
-        addBatch(result.recipes);
+        replaceBatch(result.recipes);
         addShownRecipes(result.recipes);
+        setFixText("");
+        setFixOpen(false);
+        return;
       }
 
       setFixOpen(false);
@@ -163,50 +166,52 @@ export default function RecipeResultsScreen() {
                     <IngredientChip key={ingredient} label={ingredient} />
                   ))}
                 </View>
-                <View style={styles.fixSection}>
-                  <View style={styles.fixHeader}>
-                    <View style={styles.fixHeaderText}>
-                      <Text style={styles.fixTitle}>Need to fix something?</Text>
-                      <Text style={styles.fixCopy}>
-                        Add what AppéFit missed or should avoid.
-                      </Text>
+                {isFirstBatch ? (
+                  <View style={styles.fixSection}>
+                    <View style={styles.fixHeader}>
+                      <View style={styles.fixHeaderText}>
+                        <Text style={styles.fixTitle}>Need to fix something?</Text>
+                        <Text style={styles.fixCopy}>
+                          Add what AppéFit missed or should avoid.
+                        </Text>
+                      </View>
+                      <Pressable
+                        onPress={() => {
+                          setFixOpen((value) => !value);
+                          setFixError(undefined);
+                        }}
+                        style={styles.fixToggle}
+                      >
+                        <Text style={styles.fixToggleText}>
+                          {fixOpen ? "Close" : "Fix issue"}
+                        </Text>
+                      </Pressable>
                     </View>
-                    <Pressable
-                      onPress={() => {
-                        setFixOpen((value) => !value);
-                        setFixError(undefined);
-                      }}
-                      style={styles.fixToggle}
-                    >
-                      <Text style={styles.fixToggleText}>
-                        {fixOpen ? "Close" : "Fix issue"}
-                      </Text>
-                    </Pressable>
+                    {fixOpen ? (
+                      <View style={styles.fixForm}>
+                        <TextInput
+                          maxLength={500}
+                          multiline
+                          onChangeText={setFixText}
+                          placeholder="Example: The photo missed eggs, and I do not have rice."
+                          placeholderTextColor="#8c9381"
+                          style={styles.fixInput}
+                          textAlignVertical="top"
+                          value={fixText}
+                        />
+                        {fixError ? (
+                          <Text style={styles.fixError}>{fixError}</Text>
+                        ) : null}
+                        <Button
+                          disabled={isFixing}
+                          label={isFixing ? "Updating..." : "Regenerate recipes"}
+                          onPress={handleApplyFix}
+                          variant="olive"
+                        />
+                      </View>
+                    ) : null}
                   </View>
-                  {fixOpen ? (
-                    <View style={styles.fixForm}>
-                      <TextInput
-                        maxLength={500}
-                        multiline
-                        onChangeText={setFixText}
-                        placeholder="Example: The photo missed eggs, and I do not have rice."
-                        placeholderTextColor="#8c9381"
-                        style={styles.fixInput}
-                        textAlignVertical="top"
-                        value={fixText}
-                      />
-                      {fixError ? (
-                        <Text style={styles.fixError}>{fixError}</Text>
-                      ) : null}
-                      <Button
-                        disabled={isFixing}
-                        label={isFixing ? "Regenerating..." : "Regenerate recipes"}
-                        onPress={handleApplyFix}
-                        variant="olive"
-                      />
-                    </View>
-                  ) : null}
-                </View>
+                ) : null}
               </View>
             ) : null}
           </View>
@@ -234,15 +239,21 @@ export default function RecipeResultsScreen() {
             />
           </View>
         ) : null}
-        <View style={styles.list}>
-          {recipes.map((recipe) => (
-            <Link asChild href={`/recipe/${recipe.id}`} key={recipe.id}>
-              <Pressable>
-                <RecipeCard recipe={recipe} />
-              </Pressable>
-            </Link>
-          ))}
-        </View>
+        {isFixing ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#71843d" />
+          </View>
+        ) : (
+          <View style={styles.list}>
+            {recipes.map((recipe) => (
+              <Link asChild href={`/recipe/${recipe.id}`} key={recipe.id}>
+                <Pressable>
+                  <RecipeCard recipe={recipe} />
+                </Pressable>
+              </Link>
+            ))}
+          </View>
+        )}
         {recipes.length ? (
           <>
             <Button
@@ -399,6 +410,11 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: 12,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
   },
   notice: {
     borderWidth: 1,
