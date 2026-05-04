@@ -9,7 +9,7 @@ import { useRecipeStore } from "@/store/recipeStore";
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const recipe = useRecipeStore((state) =>
-    state.recipes.find((item) => item.id === id),
+    state.recipeBatches.flat().find((item) => item.id === id),
   );
 
   if (!recipe) {
