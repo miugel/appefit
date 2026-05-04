@@ -40,14 +40,15 @@ export const IngredientExtractionResponseSchema = z.object({
 
 export const GenerateRecipesRequestSchema = z
   .object({
-    imageBase64: z.string().optional(),
+    imageBase64s: z.array(z.string()).optional(),
     manualIngredients: z.string().optional(),
     excludeRecipeFingerprints: z.array(z.string()).default([]),
     refreshCount: z.number().int().nonnegative().default(0),
   })
   .refine(
-    (value) => Boolean(value.imageBase64?.trim() || value.manualIngredients?.trim()),
-    "imageBase64 or manualIngredients is required",
+    (value) =>
+      Boolean(value.imageBase64s?.length || value.manualIngredients?.trim()),
+    "imageBase64s or manualIngredients is required",
   );
 
 export const GenerateRecipesApiResponseSchema = z.object({

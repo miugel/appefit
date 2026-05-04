@@ -6,8 +6,8 @@ import type { Recipe } from "@/types/recipe";
 import { recipeFingerprint } from "@/utils/recipeFingerprint";
 
 type RecipeStore = {
-  imageUri?: string;
-  imageBase64?: string;
+  imageUris: string[];
+  imageBase64s: string[];
   manualIngredients: string;
   detectedIngredients: string[];
   recipeBatches: Recipe[][];
@@ -17,8 +17,10 @@ type RecipeStore = {
   canRefresh: boolean;
   generationError?: string;
   exhaustionReason?: "max_refreshes_reached" | "not_enough_unique_recipes";
-  setImage: (uri: string, base64?: string) => void;
-  clearImage: () => void;
+  addImage: (uri: string, base64?: string) => void;
+  addImages: (images: Array<{ uri: string; base64?: string }>) => void;
+  removeImage: (index: number) => void;
+  clearImages: () => void;
   setManualIngredients: (value: string) => void;
   setDetectedIngredients: (ingredients: string[]) => void;
   addBatch: (recipes: Recipe[]) => void;
@@ -36,8 +38,8 @@ type RecipeStore = {
 };
 
 const initialState = {
-  imageUri: undefined,
-  imageBase64: undefined,
+  imageUris: [],
+  imageBase64s: [],
   manualIngredients: "",
   detectedIngredients: [],
   recipeBatches: [],
@@ -53,8 +55,28 @@ export const useRecipeStore = create<RecipeStore>()(
   persist(
     (set) => ({
       ...initialState,
-      setImage: (uri, base64) => set({ imageUri: uri, imageBase64: base64 }),
-      clearImage: () => set({ imageUri: undefined, imageBase64: undefined }),
+      addImage: (uri, base64) =>
+        set((state) => ({
+          imageUris: [...state.imageUris, uri],
+          imageBase64s: [...state.imageBase64s, base64 ?? ""],
+        })),
+      addImages: (images) =>
+        set((state) => ({
+          imageUris: [
+            ...state.imageUris,
+            ...images.map((image) => image.uri),
+          ],
+          imageBase64s: [
+            ...state.imageBase64s,
+            ...images.map((image) => image.base64 ?? ""),
+          ],
+        })),
+      removeImage: (index) =>
+        set((state) => ({
+          imageUris: state.imageUris.filter((_, i) => i !== index),
+          imageBase64s: state.imageBase64s.filter((_, i) => i !== index),
+        })),
+      clearImages: () => set({ imageUris: [], imageBase64s: [] }),
       setManualIngredients: (value) => set({ manualIngredients: value }),
       setDetectedIngredients: (ingredients) =>
         set({ detectedIngredients: ingredients }),
@@ -105,8 +127,8 @@ export const useRecipeStore = create<RecipeStore>()(
       name: "appefit-session",
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
-        imageUri: state.imageUri,
-        imageBase64: state.imageBase64,
+        imageUris: state.imageUris,
+        imageBase64s: state.imageBase64s,
         manualIngredients: state.manualIngredients,
         detectedIngredients: state.detectedIngredients,
         recipeBatches: state.recipeBatches,

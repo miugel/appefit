@@ -102,7 +102,7 @@ export default function LoadingScreen() {
 function useGenerateRecipes() {
   return useCallback(async () => {
     const {
-      imageBase64,
+      imageBase64s,
       manualIngredients,
       shownRecipeFingerprints,
       refreshCount,
@@ -119,7 +119,7 @@ function useGenerateRecipes() {
 
     try {
       const result = await generateRecipes({
-        imageBase64,
+        imageBase64s: imageBase64s.filter(Boolean),
         manualIngredients,
         excludeRecipeFingerprints: shownRecipeFingerprints,
         refreshCount,

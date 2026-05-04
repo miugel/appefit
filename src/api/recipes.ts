@@ -1,7 +1,7 @@
 import type { Recipe } from "@/types/recipe";
 
 export type GenerateRecipesRequest = {
-  imageBase64?: string;
+  imageBase64s?: string[];
   manualIngredients?: string;
   excludeRecipeFingerprints: string[];
   refreshCount: number;
@@ -17,10 +17,15 @@ export type GenerateRecipesResponse = {
 export async function generateRecipes(
   request: GenerateRecipesRequest,
 ): Promise<GenerateRecipesResponse> {
+  const payload = {
+    ...request,
+    imageBase64s: request.imageBase64s?.filter(Boolean),
+  };
+
   const response = await fetch(`${getApiBaseUrl()}/generate-recipe`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(request),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {

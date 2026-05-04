@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import {
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -33,17 +34,17 @@ export default function IngredientInputScreen() {
   const setManualIngredients = useRecipeStore(
     (state) => state.setManualIngredients,
   );
-  const imageUri = useRecipeStore((state) => state.imageUri);
-  const setImage = useRecipeStore((state) => state.setImage);
-  const clearImage = useRecipeStore((state) => state.clearImage);
+  const imageUris = useRecipeStore((state) => state.imageUris);
+  const addImages = useRecipeStore((state) => state.addImages);
+  const removeImage = useRecipeStore((state) => state.removeImage);
   const startNewGeneration = useRecipeStore((state) => state.startNewGeneration);
   const recipeBatches = useRecipeStore((state) => state.recipeBatches);
 
+  const MAX_PHOTOS = 3;
+
   function handleGenerate() {
-    if (!manualIngredients.trim() && !imageUri) {
-      setError(
-        "Add a photo, type ingredients, or use voice before generating recipes.",
-      );
+    if (!manualIngredients.trim() && !imageUris.length) {
+      setError("Add a photo or type ingredients before generating recipes.");
       return;
     }
 
@@ -52,15 +53,19 @@ export default function IngredientInputScreen() {
     router.push("/loading");
   }
 
-  async function handleTakePhoto() {
-    await pickImage("camera");
-  }
+  function handleSlotPress(index: number) {
+    if (index < imageUris.length || isPickingImage) return;
 
-  async function handleUploadPhoto() {
-    await pickImage("library");
+    Alert.alert("Add Photo", "", [
+      { text: "Camera", onPress: () => pickImage("camera") },
+      { text: "Photo Library", onPress: () => pickImage("library") },
+      { text: "Cancel", style: "cancel" },
+    ]);
   }
 
   async function pickImage(source: "camera" | "library") {
+    if (imageUris.length >= MAX_PHOTOS) return;
+
     setError("");
     setIsPickingImage(true);
 
@@ -79,17 +84,25 @@ export default function IngredientInputScreen() {
         return;
       }
 
+      const remainingSlots = MAX_PHOTOS - imageUris.length;
       const result =
         source === "camera"
-          ? await ImagePicker.launchCameraAsync(imagePickerOptions)
-          : await ImagePicker.launchImageLibraryAsync(imagePickerOptions);
+          ? await ImagePicker.launchCameraAsync(cameraPickerOptions)
+          : await ImagePicker.launchImageLibraryAsync({
+              ...libraryPickerOptions,
+              selectionLimit: remainingSlots,
+            });
 
       if (result.canceled) {
         return;
       }
 
-      const asset = result.assets[0];
-      setImage(asset.uri, asset.base64 ?? undefined);
+      addImages(
+        result.assets.slice(0, remainingSlots).map((asset) => ({
+          uri: asset.uri,
+          base64: asset.base64 ?? undefined,
+        })),
+      );
     } catch {
       setError("We had trouble opening your camera or photo library.");
     } finally {
@@ -124,42 +137,49 @@ export default function IngredientInputScreen() {
             <OliveLogo size="sm" />
             <Text style={styles.title}>Add your ingredients</Text>
             <Text style={styles.copy}>
-              Snap what you have and AppéFit will turn it into macro-conscious, healthy
-              recipe ideas.
+              Take a few quick photos of your ingredients and AppéFit will build practical, macro-aware recipes.
             </Text>
           </View>
-          <View style={styles.photoButton}>
-            {imageUri ? (
-              <Image source={{ uri: imageUri }} style={styles.imagePreview} />
-            ) : (
-              <View style={styles.photoIcon}>
-                <View style={styles.photoLens} />
-              </View>
-            )}
-            <Text style={styles.photoButtonTitle}>Take a Photo</Text>
-            <View style={styles.photoActions}>
-              <Pressable
-                disabled={isPickingImage}
-                onPress={handleTakePhoto}
-                style={styles.photoActionPrimary}
-              >
-                <Text style={styles.photoActionPrimaryText}>
-                  {isPickingImage ? "Opening..." : "Open Camera"}
-                </Text>
-              </Pressable>
-              <Pressable
-                disabled={isPickingImage}
-                onPress={handleUploadPhoto}
-                style={styles.photoActionSecondary}
-              >
-                <Text style={styles.photoActionSecondaryText}>Upload</Text>
-              </Pressable>
+          <View style={styles.photoSection}>
+            <Text style={styles.photoSectionTitle}>Photos</Text>
+            <Text style={styles.photoSectionCopy}>
+              Use photos for your fridge, pantry, or counter.
+            </Text>
+            <View style={styles.photoSlots}>
+              {Array.from({ length: MAX_PHOTOS }).map((_, index) => {
+                const uri = imageUris[index];
+                return (
+                  <Pressable
+                    key={index}
+                    onPress={() => handleSlotPress(index)}
+                    style={[styles.slot, uri && styles.slotFilled]}
+                    disabled={isPickingImage}
+                  >
+                    {uri ? (
+                      <>
+                        <Image source={{ uri }} style={styles.slotImage} />
+                        <Pressable
+                          onPress={() => removeImage(index)}
+                          style={styles.slotRemove}
+                          hitSlop={8}
+                        >
+                          <Text style={styles.slotRemoveText}>×</Text>
+                        </Pressable>
+                      </>
+                    ) : (
+                      <View style={styles.slotEmpty}>
+                        <View style={styles.slotIcon}>
+                          <View style={styles.slotLens} />
+                        </View>
+                        <Text style={styles.slotLabel}>
+                          {index === 0 ? "Add photo" : `Photo ${index + 1}`}
+                        </Text>
+                      </View>
+                    )}
+                  </Pressable>
+                );
+              })}
             </View>
-            {imageUri ? (
-              <Pressable onPress={clearImage}>
-                <Text style={styles.removeImageText}>Remove photo</Text>
-              </Pressable>
-            ) : null}
           </View>
           <Pressable
             onPress={() => setIsSecondaryOpen((value) => !value)}
@@ -202,7 +222,7 @@ export default function IngredientInputScreen() {
           {error ? <Text style={styles.error}>{error}</Text> : null}
         </ScrollView>
         <Button
-          disabled={!manualIngredients.trim() && !imageUri}
+          disabled={!manualIngredients.trim() && !imageUris.length}
           label="Generate Recipes"
           onPress={handleGenerate}
           variant="olive"
@@ -240,92 +260,92 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
   },
-  photoButton: {
-    alignItems: "center",
-    gap: 10,
+  photoSection: {
+    gap: 12,
     borderWidth: 2,
     borderColor: "#c8d99a",
     borderRadius: 8,
-    padding: 26,
+    padding: 16,
     backgroundColor: "#edf3df",
   },
-  photoIcon: {
-    width: 72,
-    height: 54,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 3,
-    borderColor: "#71843d",
-    borderRadius: 10,
-    backgroundColor: "#f8f7f4",
-  },
-  photoLens: {
-    width: 24,
-    height: 24,
-    borderWidth: 3,
-    borderColor: "#71843d",
-    borderRadius: 12,
-    backgroundColor: "#d8e7b8",
-  },
-  imagePreview: {
-    width: "100%",
-    height: 190,
-    borderRadius: 8,
-    backgroundColor: "#d8e7b8",
-  },
-  photoButtonTitle: {
+  photoSectionTitle: {
     color: "#26351d",
-    fontSize: 22,
+    fontSize: 17,
     fontWeight: "800",
   },
-  photoButtonMeta: {
-    overflow: "hidden",
-    borderRadius: 14,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    backgroundColor: "#d8e7b8",
-    color: "#26351d",
-    fontSize: 12,
-    fontWeight: "800",
+  photoSectionCopy: {
+    color: "#52606d",
+    fontSize: 14,
+    marginTop: -4,
   },
-  photoActions: {
-    width: "100%",
+  photoSlots: {
     flexDirection: "row",
     gap: 10,
-    marginTop: 4,
   },
-  photoActionPrimary: {
+  slot: {
+    flex: 1,
+    aspectRatio: 1,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: "#b8ce8a",
+    borderStyle: "dashed",
+    backgroundColor: "#f3f8e8",
+    overflow: "hidden",
+  },
+  slotFilled: {
+    borderStyle: "solid",
+    borderColor: "#c8d99a",
+  },
+  slotImage: {
+    width: "100%",
+    height: "100%",
+  },
+  slotRemove: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  slotRemoveText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "700",
+    lineHeight: 20,
+  },
+  slotEmpty: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 48,
-    borderRadius: 24,
-    backgroundColor: "#71843d",
+    gap: 6,
   },
-  photoActionPrimaryText: {
-    color: "#ffffff",
-    fontSize: 15,
-    fontWeight: "800",
-  },
-  photoActionSecondary: {
+  slotIcon: {
+    width: 32,
+    height: 24,
     alignItems: "center",
     justifyContent: "center",
-    minWidth: 96,
-    minHeight: 48,
-    borderWidth: 1,
-    borderColor: "#c8d99a",
-    borderRadius: 24,
-    backgroundColor: "#fbfcf7",
+    borderWidth: 2,
+    borderColor: "#71843d",
+    borderRadius: 5,
+    backgroundColor: "#f8f7f4",
   },
-  photoActionSecondaryText: {
-    color: "#26351d",
-    fontSize: 15,
-    fontWeight: "800",
+  slotLens: {
+    width: 10,
+    height: 10,
+    borderWidth: 2,
+    borderColor: "#71843d",
+    borderRadius: 5,
+    backgroundColor: "#d8e7b8",
   },
-  removeImageText: {
+  slotLabel: {
     color: "#71843d",
-    fontSize: 14,
-    fontWeight: "800",
+    fontSize: 11,
+    fontWeight: "700",
+    textAlign: "center",
   },
   secondaryPanelHeader: {
     flexDirection: "row",
@@ -423,9 +443,16 @@ const styles = StyleSheet.create({
   },
 });
 
-const imagePickerOptions: ImagePicker.ImagePickerOptions = {
+const cameraPickerOptions: ImagePicker.ImagePickerOptions = {
   allowsEditing: true,
   aspect: [4, 3],
+  base64: true,
+  mediaTypes: ["images"],
+  quality: 0.72,
+};
+
+const libraryPickerOptions: ImagePicker.ImagePickerOptions = {
+  allowsMultipleSelection: true,
   base64: true,
   mediaTypes: ["images"],
   quality: 0.72,

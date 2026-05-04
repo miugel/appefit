@@ -40,6 +40,7 @@ generateRecipesRouter.post("/", async (request, response) => {
   }
 
   const input = parsedRequest.data;
+  const imageBase64s = input.imageBase64s?.filter((image) => image.trim());
 
   if (input.refreshCount > MAX_REFRESHES_PER_SESSION) {
     response.json(
@@ -55,7 +56,7 @@ generateRecipesRouter.post("/", async (request, response) => {
 
   try {
     const detectedIngredients = await detectIngredients({
-      imageBase64: input.imageBase64,
+      imageBase64s,
       manualIngredients: input.manualIngredients,
     });
 
@@ -134,60 +135,25 @@ generateRecipesRouter.post("/", async (request, response) => {
 });
 
 async function detectIngredients({
-  imageBase64,
+  imageBase64s,
   manualIngredients,
 }: {
-  imageBase64?: string;
+  imageBase64s?: string[];
   manualIngredients?: string;
 }) {
   const manualIngredientList = normalizeIngredients([manualIngredients ?? ""]);
 
-  if (!imageBase64) {
+  if (!imageBase64s?.length) {
     return manualIngredientList;
   }
 
   try {
-    const client = createOpenAIClient();
-    const completion = await client.chat.completions.create({
-      model: visionModel,
-      messages: [
-        {
-          role: "system",
-          content: ingredientExtractionPrompt,
-        },
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: "Extract visible food ingredients from this image.",
-            },
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:image/jpeg;base64,${imageBase64}`,
-              },
-            },
-          ],
-        },
-      ],
-      response_format: zodResponseFormat(
-        IngredientExtractionResponseSchema,
-        "ingredient_extraction",
-      ),
-    });
+    const perImageIngredients = await Promise.all(
+      imageBase64s.map((imageBase64) => extractIngredientsFromImage(imageBase64)),
+    );
 
-    const extractedIngredients = IngredientExtractionResponseSchema.parse(
-      JSON.parse(completion.choices[0]?.message.content ?? "{}"),
-    ).ingredients
-      .filter(
-        (ingredient) =>
-          ingredient.confidence === undefined ||
-          ingredient.confidence >= IMAGE_CONFIDENCE_THRESHOLD,
-      )
-      .map((ingredient) => ingredient.name);
-
-    return normalizeIngredients([...manualIngredientList, ...extractedIngredients]);
+    const allExtracted = perImageIngredients.flat();
+    return normalizeIngredients([...manualIngredientList, ...allExtracted]);
   } catch (error) {
     if (manualIngredientList.length) {
       return manualIngredientList;
@@ -195,6 +161,49 @@ async function detectIngredients({
 
     throw error;
   }
+}
+
+async function extractIngredientsFromImage(imageBase64: string) {
+  const client = createOpenAIClient();
+  const completion = await client.chat.completions.create({
+    model: visionModel,
+    messages: [
+      {
+        role: "system",
+        content: ingredientExtractionPrompt,
+      },
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: "Extract visible food ingredients from this image.",
+          },
+          {
+            type: "image_url",
+            image_url: {
+              url: `data:image/jpeg;base64,${imageBase64}`,
+            },
+          },
+        ],
+      },
+    ],
+    response_format: zodResponseFormat(
+      IngredientExtractionResponseSchema,
+      "ingredient_extraction",
+    ),
+  });
+
+  return IngredientExtractionResponseSchema.parse(
+    JSON.parse(completion.choices[0]?.message.content ?? "{}"),
+  ).ingredients
+    .filter(
+      (ingredient) =>
+        ingredient.confidence === null ||
+        ingredient.confidence === undefined ||
+        ingredient.confidence >= IMAGE_CONFIDENCE_THRESHOLD,
+    )
+    .map((ingredient) => ingredient.name);
 }
 
 async function generateRecipeBatch({
