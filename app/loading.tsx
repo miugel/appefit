@@ -6,6 +6,7 @@ import { Button } from "@/components/Button";
 import { OliveLogo } from "@/components/OliveLogo";
 import { generateRecipes } from "@/api/recipes";
 import { useRecipeStore } from "@/store/recipeStore";
+import { TIMING, ERROR_MESSAGES } from "@/constants/messages";
 
 const LOADING_MESSAGES = [
   "Counting macros with unreasonable confidence...",
@@ -36,17 +37,17 @@ function useAnimatedMessage() {
     const interval = setInterval(() => {
       Animated.timing(opacity, {
         toValue: 0,
-        duration: 300,
+        duration: TIMING.FADE_OUT_DURATION,
         useNativeDriver: true,
       }).start(() => {
         setIndex((i) => randomIndex(i));
         Animated.timing(opacity, {
           toValue: 1,
-          duration: 400,
+          duration: TIMING.FADE_IN_DURATION,
           useNativeDriver: true,
         }).start();
       });
-    }, 4500);
+    }, TIMING.MESSAGE_ROTATION_INTERVAL);
     return () => clearInterval(interval);
   }, []);
 

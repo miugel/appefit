@@ -1,5 +1,6 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import type { ReactNode } from "react";
+import { useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -8,8 +9,11 @@ import { useRecipeStore } from "@/store/recipeStore";
 
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const recipe = useRecipeStore((state) =>
-    state.recipeBatches.flat().find((item) => item.id === id),
+  const recipeBatches = useRecipeStore((state) => state.recipeBatches);
+
+  const recipe = useMemo(
+    () => recipeBatches.flat().find((item) => item.id === id),
+    [recipeBatches, id],
   );
 
   if (!recipe) {

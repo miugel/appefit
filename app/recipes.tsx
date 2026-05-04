@@ -16,8 +16,7 @@ import { Button } from "@/components/Button";
 import { IngredientChip } from "@/components/IngredientChip";
 import { RecipeCard } from "@/components/RecipeCard";
 import { useRecipeStore } from "@/store/recipeStore";
-
-const MAX_REFRESHES_PER_SESSION = 3;
+import { ERROR_MESSAGES, UI } from "@/constants/messages";
 
 export default function RecipeResultsScreen() {
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
@@ -38,8 +37,8 @@ export default function RecipeResultsScreen() {
 
   const isFirstBatch = currentBatchIndex === 0;
   const isLastBatch = currentBatchIndex === recipeBatches.length - 1;
-  const refreshLimitReached = refreshCount >= MAX_REFRESHES_PER_SESSION;
-  const refreshesRemaining = Math.max(MAX_REFRESHES_PER_SESSION - refreshCount, 0);
+  const refreshLimitReached = refreshCount >= UI.MAX_REFRESHES_PER_SESSION;
+  const refreshesRemaining = Math.max(UI.MAX_REFRESHES_PER_SESSION - refreshCount, 0);
 
   const rawRecipes = recipeBatches[currentBatchIndex] ?? [];
   const recipes = useMemo(
@@ -71,7 +70,7 @@ export default function RecipeResultsScreen() {
     const trimmedFix = fixText.trim();
 
     if (!trimmedFix) {
-      setFixError("Add the issue first, then regenerate.");
+      setFixError(ERROR_MESSAGES.NO_FIX_TEXT);
       return;
     }
 
@@ -117,7 +116,7 @@ export default function RecipeResultsScreen() {
       setFixError(
         error instanceof Error
           ? error.message
-          : "Something went wrong. Check your connection and try again.",
+          : ERROR_MESSAGES.CONNECTION,
       );
     } finally {
       setIsFixing(false);

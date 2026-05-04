@@ -18,18 +18,12 @@ import { Button } from "@/components/Button";
 import { MAX_RECIPE_PHOTOS } from "@/config/photos";
 import { OliveLogo } from "@/components/OliveLogo";
 import { useRecipeStore } from "@/store/recipeStore";
-
-// type SpeechModule = typeof import("expo-speech-recognition");
-// type SpeechEventSubscription = { remove: () => void };
+import { ERROR_MESSAGES } from "@/constants/messages";
 
 export default function IngredientInputScreen() {
   const [error, setError] = useState("");
   const [isSecondaryOpen, setIsSecondaryOpen] = useState(false);
   const [isPickingImage, setIsPickingImage] = useState(false);
-  // const [isListening, setIsListening] = useState(false);
-  // const [voicePreview, setVoicePreview] = useState("");
-  // const speechModuleRef = useRef<SpeechModule | null>(null);
-  // const speechSubscriptionsRef = useRef<SpeechEventSubscription[]>([]);
   const manualIngredients = useRecipeStore((state) => state.manualIngredients);
   const setManualIngredients = useRecipeStore(
     (state) => state.setManualIngredients,
@@ -42,7 +36,7 @@ export default function IngredientInputScreen() {
 
   function handleGenerate() {
     if (!manualIngredients.trim() && !imageUris.length) {
-      setError("Add a photo or type ingredients before generating recipes.");
+      setError(ERROR_MESSAGES.NO_INGREDIENTS);
       return;
     }
 
@@ -66,7 +60,7 @@ export default function IngredientInputScreen() {
       const permission = await ImagePicker.requestCameraPermissionsAsync();
 
       if (!permission.granted) {
-        setError("Camera access is needed to take an ingredient photo.");
+        setError(ERROR_MESSAGES.PERMISSION_CAMERA);
         return;
       }
 
@@ -82,15 +76,13 @@ export default function IngredientInputScreen() {
           base64: asset.base64 ?? undefined,
         })),
       );
-    } catch {
-      setError("We had trouble opening your camera.");
+    } catch (error) {
+      console.error("Camera error:", error);
+      setError(ERROR_MESSAGES.CAMERA);
     } finally {
       setIsPickingImage(false);
     }
   }
-
-  // async function handleToggleDictation() { ... }
-  // async function loadSpeechRecognition() { ... }
 
   return (
     <SafeAreaView style={styles.safeArea}>
