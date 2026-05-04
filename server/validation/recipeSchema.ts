@@ -33,7 +33,7 @@ export const IngredientExtractionResponseSchema = z.object({
   ingredients: z.array(
     z.object({
       name: z.string().min(1),
-      confidence: z.number().min(0).max(1).optional(),
+      confidence: z.number().min(0).max(1).optional().nullable(),
     }),
   ),
 });
