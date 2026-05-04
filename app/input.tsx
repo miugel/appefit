@@ -443,12 +443,12 @@ const cameraPickerOptions: ImagePicker.ImagePickerOptions = {
   allowsEditing: false,
   base64: true,
   mediaTypes: ["images"],
-  quality: 0.4,
+  quality: 0.5,
 };
 
 const libraryPickerOptions: ImagePicker.ImagePickerOptions = {
   allowsMultipleSelection: MAX_RECIPE_PHOTOS > 1,
   base64: true,
   mediaTypes: ["images"],
-  quality: 0.4,
+  quality: 0.5,
 };

@@ -1,7 +1,7 @@
 import type { Recipe } from "@/types/recipe";
 import { MAX_RECIPE_PHOTOS } from "@/config/photos";
 
-const MAX_RECIPE_REQUEST_BYTES = 12 * 1024 * 1024;
+const MAX_RECIPE_REQUEST_BYTES = 25 * 1024 * 1024;
 
 export type GenerateRecipesRequest = {
   imageBase64s?: string[];
