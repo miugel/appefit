@@ -48,7 +48,7 @@ export const GenerateRecipesRequestSchema = z
     correctionContext: z
       .string()
       .trim()
-      .max(1500, "Keep fix notes under 1500 characters.")
+      .max(500, "Keep fix notes under 500 characters.")
       .optional(),
     excludeRecipeFingerprints: z.array(z.string()).default([]),
     refreshCount: z.number().int().nonnegative().default(0),

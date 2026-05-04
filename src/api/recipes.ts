@@ -23,7 +23,7 @@ export async function generateRecipes(
 ): Promise<GenerateRecipesResponse> {
   const payload = {
     ...request,
-    correctionContext: request.correctionContext?.slice(0, 1500),
+    correctionContext: request.correctionContext?.slice(0, 500),
     imageBase64s: request.imageBase64s
       ?.filter(Boolean)
       .slice(0, MAX_RECIPE_PHOTOS),
