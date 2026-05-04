@@ -21,6 +21,7 @@ import {
 
 const MAX_GENERATION_RETRIES = 2;
 const MAX_REFRESHES_PER_SESSION = 3;
+const MAX_MISSING_INGREDIENTS_PER_RECIPE = 3;
 const IMAGE_CONFIDENCE_THRESHOLD = 0.45;
 
 const textModel = process.env.OPENAI_TEXT_MODEL ?? "gpt-5.4-mini";
@@ -76,7 +77,7 @@ generateRecipesRouter.post("/", async (request, response) => {
         ingredients: detectedIngredients,
         excludeRecipeFingerprints: Array.from(excludedFingerprints),
         attempt,
-      });
+      }).then(filterRecipesByMissingIngredientLimit);
 
       const candidates = uniqueNonExcludedRecipes(
         batch,
@@ -230,6 +231,7 @@ async function generateRecipeBatch({
           ingredients,
           excludeRecipeFingerprints,
           attempt,
+          maxMissingIngredients: MAX_MISSING_INGREDIENTS_PER_RECIPE,
         }),
       },
     ],
@@ -250,4 +252,11 @@ async function generateRecipeBatch({
       recipe.totalTimeMinutes ||
       recipe.prepTimeMinutes + recipe.cookTimeMinutes,
   }));
+}
+
+function filterRecipesByMissingIngredientLimit(recipes: ServerRecipe[]) {
+  return recipes.filter(
+    (recipe) =>
+      recipe.missingIngredients.length <= MAX_MISSING_INGREDIENTS_PER_RECIPE,
+  );
 }

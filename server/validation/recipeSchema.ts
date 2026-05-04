@@ -9,7 +9,7 @@ export const RecipeSchema = z.object({
   totalTimeMinutes: z.number().int().nonnegative(),
   servings: z.number().int().positive(),
   difficulty: z.enum(["easy", "medium", "hard"]),
-  missingIngredients: z.array(z.string()).default([]),
+  missingIngredients: z.array(z.string()).max(3).default([]),
   ingredients: z.array(
     z.object({
       name: z.string().min(1),

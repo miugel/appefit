@@ -12,10 +12,12 @@ export function buildRecipeGenerationPrompt({
   ingredients,
   excludeRecipeFingerprints,
   attempt,
+  maxMissingIngredients,
 }: {
   ingredients: string[];
   excludeRecipeFingerprints: string[];
   attempt: number;
+  maxMissingIngredients: number;
 }) {
   const retryInstruction =
     attempt > 0
@@ -38,7 +40,8 @@ Rules:
 - Generate up to 5 recipes. Fewer high-quality recipes is better than 5 mediocre ones.
 - Recipes should be realistic for home cooking.
 - Prefer recipes that use the available ingredients.
-- Strongly prefer recipes that use the available ingredients. Limit missing ingredients to 3 or fewer per recipe.
+- Strongly prefer recipes that use the available ingredients.
+- Limit missing ingredients to ${maxMissingIngredients} or fewer per recipe. If a recipe needs more than ${maxMissingIngredients} missing ingredients, choose a simpler recipe concept.
 - Missing ingredients should be common pantry or grocery items.
 - Do not repeat recipe concepts.
 - Steps should be clear, ordered, and concise.
