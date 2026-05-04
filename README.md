@@ -5,28 +5,35 @@ Take a photo of ingredients you already have. Get 5 quality, macro-conscious rec
 ## Quick Start
 
 ### Requirements
+
 - Node.js 18+
 - OpenAI API key
 - Expo CLI: `npm install -g expo-cli`
 
 ### Setup
 
-1. Clone repo and install:
+1. Clone repo and install dependencies:
+
 ```bash
 npm install
 ```
 
 2. Copy `.env.example` to `.env` and add your OpenAI API key:
+
 ```bash
 cp .env.example .env
 ```
 
 3. Start the backend:
+
 ```bash
 npm run server
 ```
 
+**Or** use the production backend at `https://appefit-production.up.railway.app` by setting `EXPO_PUBLIC_API_BASE_URL` in your `.env`.
+
 4. Start the app:
+
 ```bash
 npm run dev
 ```
