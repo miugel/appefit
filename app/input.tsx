@@ -38,6 +38,7 @@ export default function IngredientInputScreen() {
   const setImage = useRecipeStore((state) => state.setImage);
   const clearImage = useRecipeStore((state) => state.clearImage);
   const startNewGeneration = useRecipeStore((state) => state.startNewGeneration);
+  const recipeBatches = useRecipeStore((state) => state.recipeBatches);
 
   useEffect(() => {
     return () => {
@@ -204,6 +205,16 @@ export default function IngredientInputScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          <View style={styles.breadcrumbRow}>
+            <Pressable onPress={() => router.back()}>
+              <Text style={styles.breadcrumbText}>← AppéFit</Text>
+            </Pressable>
+            {recipeBatches.length > 0 ? (
+              <Pressable onPress={() => router.push("/recipes")}>
+                <Text style={styles.breadcrumbText}>Back to recipes →</Text>
+              </Pressable>
+            ) : null}
+          </View>
           <View style={styles.header}>
             <OliveLogo size="sm" />
             <Text style={styles.title}>Add your ingredients</Text>
@@ -505,6 +516,15 @@ const styles = StyleSheet.create({
   },
   submit: {
     marginTop: 12,
+  },
+  breadcrumbRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  breadcrumbText: {
+    color: "#71843d",
+    fontSize: 15,
+    fontWeight: "700",
   },
 });
 

@@ -12,7 +12,22 @@ const MAX_REFRESHES_PER_SESSION = 3;
 
 export default function RecipeResultsScreen() {
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
-  const rawRecipes = useRecipeStore((state) => state.recipes);
+
+  const recipeBatches = useRecipeStore((state) => state.recipeBatches);
+  const currentBatchIndex = useRecipeStore((state) => state.currentBatchIndex);
+  const goToNextBatch = useRecipeStore((state) => state.goToNextBatch);
+  const goToPreviousBatch = useRecipeStore((state) => state.goToPreviousBatch);
+  const detectedIngredients = useRecipeStore((state) => state.detectedIngredients);
+  const canRefresh = useRecipeStore((state) => state.canRefresh);
+  const exhaustionReason = useRecipeStore((state) => state.exhaustionReason);
+  const refreshCount = useRecipeStore((state) => state.refreshCount);
+
+  const isFirstBatch = currentBatchIndex === 0;
+  const isLastBatch = currentBatchIndex === recipeBatches.length - 1;
+  const refreshLimitReached = refreshCount >= MAX_REFRESHES_PER_SESSION;
+  const refreshesRemaining = Math.max(MAX_REFRESHES_PER_SESSION - refreshCount, 0);
+
+  const rawRecipes = recipeBatches[currentBatchIndex] ?? [];
   const recipes = useMemo(
     () =>
       [...rawRecipes].sort(
@@ -20,26 +35,22 @@ export default function RecipeResultsScreen() {
       ),
     [rawRecipes],
   );
-  const detectedIngredients = useRecipeStore(
-    (state) => state.detectedIngredients,
-  );
-  const canRefresh = useRecipeStore((state) => state.canRefresh);
-  const exhaustionReason = useRecipeStore((state) => state.exhaustionReason);
-  const refreshCount = useRecipeStore((state) => state.refreshCount);
-  const hasRefreshed = refreshCount > 0;
-  const refreshLimitReached = refreshCount >= MAX_REFRESHES_PER_SESSION;
-  const refreshesRemaining = Math.max(
-    MAX_REFRESHES_PER_SESSION - refreshCount,
-    0,
-  );
 
-  function handleRefresh() {
-    if (!canRefresh || refreshLimitReached) {
-      return;
+  function handleBack() {
+    if (isFirstBatch) {
+      router.back();
+    } else {
+      goToPreviousBatch();
     }
+  }
 
-    useRecipeStore.getState().incrementRefreshCount();
-    router.replace("/loading");
+  function handleForward() {
+    if (isLastBatch) {
+      useRecipeStore.getState().incrementRefreshCount();
+      router.replace("/loading");
+    } else {
+      goToNextBatch();
+    }
   }
 
   return (
@@ -48,11 +59,10 @@ export default function RecipeResultsScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        <Pressable
-          onPress={() => router.back()}
-          style={styles.breadcrumb}
-        >
-          <Text style={styles.breadcrumbText}>← Start over</Text>
+        <Pressable onPress={handleBack} style={styles.breadcrumb}>
+          <Text style={styles.breadcrumbText}>
+            {isFirstBatch ? "← Start over" : "← Previous recipes"}
+          </Text>
         </Pressable>
         <View style={styles.header}>
           <Text style={styles.title}>Recipe ideas</Text>
@@ -87,7 +97,7 @@ export default function RecipeResultsScreen() {
             ) : null}
           </View>
         ) : null}
-        {exhaustionReason ? (
+        {isLastBatch && exhaustionReason ? (
           <View style={styles.notice}>
             <Text style={styles.noticeText}>
               {exhaustionReason === "max_refreshes_reached"
@@ -122,18 +132,16 @@ export default function RecipeResultsScreen() {
         {recipes.length ? (
           <>
             <Button
-              disabled={!canRefresh || refreshLimitReached}
-              label="Mix it up"
-              onPress={handleRefresh}
+              disabled={isLastBatch && (!canRefresh || refreshLimitReached)}
+              label={isLastBatch ? "Mix it up" : "Next recipe batch"}
+              onPress={handleForward}
               variant="olive"
             />
-            {hasRefreshed ? (
+            {isLastBatch && refreshCount > 0 ? (
               <Text style={styles.refreshCountText}>
                 {refreshLimitReached
                   ? "Refresh limit reached for these ingredients."
-                  : `${refreshesRemaining} refresh${
-                      refreshesRemaining === 1 ? "" : "es"
-                    } left for these ingredients.`}
+                  : `${refreshesRemaining} refresh${refreshesRemaining === 1 ? "" : "es"} left for these ingredients.`}
               </Text>
             ) : null}
           </>

@@ -10,7 +10,8 @@ type RecipeStore = {
   imageBase64?: string;
   manualIngredients: string;
   detectedIngredients: string[];
-  recipes: Recipe[];
+  recipeBatches: Recipe[][];
+  currentBatchIndex: number;
   shownRecipeFingerprints: string[];
   refreshCount: number;
   canRefresh: boolean;
@@ -20,8 +21,9 @@ type RecipeStore = {
   clearImage: () => void;
   setManualIngredients: (value: string) => void;
   setDetectedIngredients: (ingredients: string[]) => void;
-  setRecipes: (recipes: Recipe[]) => void;
-  startNewGeneration: () => void;
+  addBatch: (recipes: Recipe[]) => void;
+  goToNextBatch: () => void;
+  goToPreviousBatch: () => void;
   addShownRecipes: (recipes: Recipe[]) => void;
   incrementRefreshCount: () => void;
   setCanRefresh: (value: boolean) => void;
@@ -29,6 +31,7 @@ type RecipeStore = {
   setExhaustionReason: (
     reason?: "max_refreshes_reached" | "not_enough_unique_recipes",
   ) => void;
+  startNewGeneration: () => void;
   resetSession: () => void;
 };
 
@@ -37,7 +40,8 @@ const initialState = {
   imageBase64: undefined,
   manualIngredients: "",
   detectedIngredients: [],
-  recipes: [],
+  recipeBatches: [],
+  currentBatchIndex: 0,
   shownRecipeFingerprints: [],
   refreshCount: 0,
   canRefresh: true,
@@ -54,17 +58,22 @@ export const useRecipeStore = create<RecipeStore>()(
       setManualIngredients: (value) => set({ manualIngredients: value }),
       setDetectedIngredients: (ingredients) =>
         set({ detectedIngredients: ingredients }),
-      setRecipes: (recipes) => set({ recipes }),
-      startNewGeneration: () =>
-        set({
-          detectedIngredients: [],
-          recipes: [],
-          shownRecipeFingerprints: [],
-          refreshCount: 0,
-          canRefresh: true,
-          generationError: undefined,
-          exhaustionReason: undefined,
-        }),
+      addBatch: (recipes) =>
+        set((state) => ({
+          recipeBatches: [...state.recipeBatches, recipes],
+          currentBatchIndex: state.recipeBatches.length,
+        })),
+      goToNextBatch: () =>
+        set((state) => ({
+          currentBatchIndex: Math.min(
+            state.currentBatchIndex + 1,
+            state.recipeBatches.length - 1,
+          ),
+        })),
+      goToPreviousBatch: () =>
+        set((state) => ({
+          currentBatchIndex: Math.max(state.currentBatchIndex - 1, 0),
+        })),
       addShownRecipes: (recipes) =>
         set((state) => ({
           shownRecipeFingerprints: Array.from(
@@ -79,6 +88,17 @@ export const useRecipeStore = create<RecipeStore>()(
       setCanRefresh: (value) => set({ canRefresh: value }),
       setGenerationError: (message) => set({ generationError: message }),
       setExhaustionReason: (reason) => set({ exhaustionReason: reason }),
+      startNewGeneration: () =>
+        set({
+          detectedIngredients: [],
+          recipeBatches: [],
+          currentBatchIndex: 0,
+          shownRecipeFingerprints: [],
+          refreshCount: 0,
+          canRefresh: true,
+          generationError: undefined,
+          exhaustionReason: undefined,
+        }),
       resetSession: () => set(initialState),
     }),
     {
@@ -89,7 +109,8 @@ export const useRecipeStore = create<RecipeStore>()(
         imageBase64: state.imageBase64,
         manualIngredients: state.manualIngredients,
         detectedIngredients: state.detectedIngredients,
-        recipes: state.recipes,
+        recipeBatches: state.recipeBatches,
+        currentBatchIndex: state.currentBatchIndex,
         shownRecipeFingerprints: state.shownRecipeFingerprints,
         refreshCount: state.refreshCount,
         canRefresh: state.canRefresh,

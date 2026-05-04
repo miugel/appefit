@@ -20,8 +20,16 @@ const LOADING_MESSAGES = [
   "Pretending we have a Michelin star...",
 ];
 
+function randomIndex(exclude: number) {
+  let next: number;
+  do {
+    next = Math.floor(Math.random() * LOADING_MESSAGES.length);
+  } while (next === exclude);
+  return next;
+}
+
 function useAnimatedMessage() {
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(() => randomIndex(-1));
   const opacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -31,7 +39,7 @@ function useAnimatedMessage() {
         duration: 300,
         useNativeDriver: true,
       }).start(() => {
-        setIndex((i) => (i + 1) % LOADING_MESSAGES.length);
+        setIndex((i) => randomIndex(i));
         Animated.timing(opacity, {
           toValue: 1,
           duration: 400,
@@ -99,7 +107,7 @@ function useGenerateRecipes() {
       shownRecipeFingerprints,
       refreshCount,
       setDetectedIngredients,
-      setRecipes,
+      addBatch,
       addShownRecipes,
       setCanRefresh,
       setGenerationError,
@@ -122,7 +130,7 @@ function useGenerateRecipes() {
       setExhaustionReason(result.reason);
 
       if (result.recipes.length > 0) {
-        setRecipes(result.recipes);
+        addBatch(result.recipes);
         addShownRecipes(result.recipes);
       }
 
