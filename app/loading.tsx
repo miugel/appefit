@@ -20,60 +20,36 @@ const LOADING_MESSAGES = [
   "Pretending we have a Michelin star...",
 ];
 
-function useLoadingMessage() {
+function useAnimatedMessage() {
   const [index, setIndex] = useState(0);
+  const opacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setIndex((i) => (i + 1) % LOADING_MESSAGES.length);
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        setIndex((i) => (i + 1) % LOADING_MESSAGES.length);
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }).start();
+      });
     }, 4500);
     return () => clearInterval(interval);
   }, []);
 
-  return LOADING_MESSAGES[index];
-}
-
-function ThinkingDots() {
-  const dots = [useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current];
-
-  useEffect(() => {
-    const pulse = (dot: Animated.Value, delay: number) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(dot, {
-            toValue: 1,
-            duration: 400,
-            useNativeDriver: true,
-          }),
-          Animated.timing(dot, {
-            toValue: 0,
-            duration: 400,
-            useNativeDriver: true,
-          }),
-          Animated.delay(800),
-        ]),
-      );
-
-    const animations = dots.map((dot, i) => pulse(dot, i * 160));
-    animations.forEach((a) => a.start());
-    return () => animations.forEach((a) => a.stop());
-  }, []);
-
-  return (
-    <View style={styles.dots}>
-      {dots.map((opacity, i) => (
-        <Animated.View key={i} style={[styles.dot, { opacity }]} />
-      ))}
-    </View>
-  );
+  return { message: LOADING_MESSAGES[index], opacity };
 }
 
 export default function LoadingScreen() {
   const generationError = useRecipeStore((state) => state.generationError);
   const runGeneration = useGenerateRecipes();
   const hasStartedGeneration = useRef(false);
-  const loadingMessage = useLoadingMessage();
+  const { message, opacity } = useAnimatedMessage();
 
   useEffect(() => {
     if (hasStartedGeneration.current) {
@@ -110,8 +86,7 @@ export default function LoadingScreen() {
   return (
     <View style={styles.container}>
       <OliveLogo size="lg" />
-      <ThinkingDots />
-      <Text style={styles.message}>{loadingMessage}</Text>
+      <Animated.Text style={[styles.message, { opacity }]}>{message}</Animated.Text>
     </View>
   );
 }
@@ -171,22 +146,12 @@ const styles = StyleSheet.create({
     padding: 24,
     backgroundColor: "#f8f7f4",
   },
-  dots: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#71843d",
-  },
   message: {
     color: "#52606d",
-    fontSize: 16,
+    fontSize: 19,
     fontWeight: "600",
     textAlign: "center",
-    lineHeight: 24,
+    lineHeight: 28,
   },
   title: {
     color: "#1f2933",

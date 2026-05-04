@@ -4,7 +4,6 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "@/components/Button";
-import { generateRecipes } from "@/api/recipes";
 import { IngredientChip } from "@/components/IngredientChip";
 import { RecipeCard } from "@/components/RecipeCard";
 import { useRecipeStore } from "@/store/recipeStore";
@@ -12,8 +11,6 @@ import { useRecipeStore } from "@/store/recipeStore";
 const MAX_REFRESHES_PER_SESSION = 3;
 
 export default function RecipeResultsScreen() {
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [refreshError, setRefreshError] = useState("");
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
   const rawRecipes = useRecipeStore((state) => state.recipes);
   const recipes = useMemo(
@@ -36,57 +33,13 @@ export default function RecipeResultsScreen() {
     0,
   );
 
-  async function handleRefresh() {
-    if (!canRefresh || refreshLimitReached || isRefreshing) {
+  function handleRefresh() {
+    if (!canRefresh || refreshLimitReached) {
       return;
     }
 
-    setIsRefreshing(true);
-    setRefreshError("");
-
-    const {
-      imageBase64,
-      manualIngredients,
-      shownRecipeFingerprints,
-      refreshCount: currentRefreshCount,
-      setDetectedIngredients,
-      setRecipes,
-      addShownRecipes,
-      incrementRefreshCount,
-      setCanRefresh,
-      setExhaustionReason,
-    } = useRecipeStore.getState();
-
-    const nextRefreshCount = currentRefreshCount + 1;
-
-    incrementRefreshCount();
-    setExhaustionReason(undefined);
-
-    try {
-      const result = await generateRecipes({
-        imageBase64,
-        manualIngredients,
-        excludeRecipeFingerprints: shownRecipeFingerprints,
-        refreshCount: nextRefreshCount,
-      });
-
-      setDetectedIngredients(result.detectedIngredients);
-      setCanRefresh(result.canRefresh);
-      setExhaustionReason(result.reason);
-
-      if (result.recipes.length > 0) {
-        setRecipes(result.recipes);
-        addShownRecipes(result.recipes);
-      }
-    } catch (error) {
-      setRefreshError(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong. Check your connection and try again.",
-      );
-    } finally {
-      setIsRefreshing(false);
-    }
+    useRecipeStore.getState().incrementRefreshCount();
+    router.replace("/loading");
   }
 
   return (
@@ -143,11 +96,6 @@ export default function RecipeResultsScreen() {
             </Text>
           </View>
         ) : null}
-        {refreshError ? (
-          <View style={styles.errorNotice}>
-            <Text style={styles.errorText}>{refreshError}</Text>
-          </View>
-        ) : null}
         {!recipes.length ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>No recipes yet</Text>
@@ -174,10 +122,8 @@ export default function RecipeResultsScreen() {
         {recipes.length ? (
           <>
             <Button
-              disabled={!canRefresh || refreshLimitReached || isRefreshing}
-              label={
-                isRefreshing ? "Regenerating..." : "Regenerate for new recipes"
-              }
+              disabled={!canRefresh || refreshLimitReached}
+              label="Mix it up"
               onPress={handleRefresh}
               variant="olive"
             />
@@ -278,19 +224,6 @@ const styles = StyleSheet.create({
   },
   noticeText: {
     color: "#52606d",
-    fontSize: 14,
-    fontWeight: "700",
-    lineHeight: 21,
-  },
-  errorNotice: {
-    borderWidth: 1,
-    borderColor: "#f4b8a8",
-    borderRadius: 8,
-    padding: 14,
-    backgroundColor: "#fff4ef",
-  },
-  errorText: {
-    color: "#9f3412",
     fontSize: 14,
     fontWeight: "700",
     lineHeight: 21,
