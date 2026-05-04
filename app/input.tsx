@@ -2,7 +2,6 @@ import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
 import {
-  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -54,53 +53,37 @@ export default function IngredientInputScreen() {
 
   function handleSlotPress(index: number) {
     if (index < imageUris.length || isPickingImage) return;
-
-    Alert.alert("Add Photo", "", [
-      { text: "Camera", onPress: () => pickImage("camera") },
-      { text: "Photo Library", onPress: () => pickImage("library") },
-      { text: "Cancel", style: "cancel" },
-    ]);
+    pickImage();
   }
 
-  async function pickImage(source: "camera" | "library") {
+  async function pickImage() {
     if (imageUris.length >= MAX_RECIPE_PHOTOS) return;
 
     setError("");
     setIsPickingImage(true);
 
     try {
-      const permission =
-        source === "camera"
-          ? await ImagePicker.requestCameraPermissionsAsync()
-          : await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
 
       if (!permission.granted) {
-        setError(
-          source === "camera"
-            ? "Camera access is needed to take an ingredient photo."
-            : "Photo library access is needed to upload an ingredient photo.",
-        );
+        setError("Camera access is needed to take an ingredient photo.");
         return;
       }
 
-      const remainingSlots = MAX_RECIPE_PHOTOS - imageUris.length;
-      const result =
-        source === "camera"
-          ? await ImagePicker.launchCameraAsync(cameraPickerOptions)
-          : await ImagePicker.launchImageLibraryAsync(libraryPickerOptions);
+      const result = await ImagePicker.launchCameraAsync(cameraPickerOptions);
 
       if (result.canceled) {
         return;
       }
 
       addImages(
-        result.assets.slice(0, remainingSlots).map((asset) => ({
+        result.assets.map((asset) => ({
           uri: asset.uri,
           base64: asset.base64 ?? undefined,
         })),
       );
     } catch {
-      setError("We had trouble opening your camera or photo library.");
+      setError("We had trouble opening your camera.");
     } finally {
       setIsPickingImage(false);
     }
@@ -146,7 +129,7 @@ export default function IngredientInputScreen() {
                 const uri = imageUris[index];
                 return (
                   <Pressable
-                    key={index}
+                    key={`photo-${index}`}
                     onPress={() => handleSlotPress(index)}
                     style={[styles.slot, uri && styles.slotFilled]}
                     disabled={isPickingImage}
@@ -441,13 +424,6 @@ const styles = StyleSheet.create({
 
 const cameraPickerOptions: ImagePicker.ImagePickerOptions = {
   allowsEditing: false,
-  base64: true,
-  mediaTypes: ["images"],
-  quality: 0.5,
-};
-
-const libraryPickerOptions: ImagePicker.ImagePickerOptions = {
-  allowsMultipleSelection: MAX_RECIPE_PHOTOS > 1,
   base64: true,
   mediaTypes: ["images"],
   quality: 0.5,
