@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { Animated, StyleSheet, Text, View } from "react-native";
 
 import { Button } from "@/components/Button";
 import { OliveLogo } from "@/components/OliveLogo";
@@ -26,11 +26,47 @@ function useLoadingMessage() {
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((i) => (i + 1) % LOADING_MESSAGES.length);
-    }, 3000);
+    }, 4500);
     return () => clearInterval(interval);
   }, []);
 
   return LOADING_MESSAGES[index];
+}
+
+function ThinkingDots() {
+  const dots = [useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current];
+
+  useEffect(() => {
+    const pulse = (dot: Animated.Value, delay: number) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(dot, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(dot, {
+            toValue: 0,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.delay(800),
+        ]),
+      );
+
+    const animations = dots.map((dot, i) => pulse(dot, i * 160));
+    animations.forEach((a) => a.start());
+    return () => animations.forEach((a) => a.stop());
+  }, []);
+
+  return (
+    <View style={styles.dots}>
+      {dots.map((opacity, i) => (
+        <Animated.View key={i} style={[styles.dot, { opacity }]} />
+      ))}
+    </View>
+  );
 }
 
 export default function LoadingScreen() {
@@ -74,8 +110,8 @@ export default function LoadingScreen() {
   return (
     <View style={styles.container}>
       <OliveLogo size="lg" />
-      <ActivityIndicator color="#71843d" size="large" />
-      <Text style={styles.title}>{loadingMessage}</Text>
+      <ThinkingDots />
+      <Text style={styles.message}>{loadingMessage}</Text>
     </View>
   );
 }
@@ -131,14 +167,32 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: 14,
+    gap: 20,
     padding: 24,
     backgroundColor: "#f8f7f4",
+  },
+  dots: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#71843d",
+  },
+  message: {
+    color: "#52606d",
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
+    lineHeight: 24,
   },
   title: {
     color: "#1f2933",
     fontSize: 22,
     fontWeight: "700",
+    textAlign: "center",
   },
   copy: {
     color: "#52606d",

@@ -1,6 +1,6 @@
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import type { ReactNode } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "@/components/Button";
@@ -34,11 +34,12 @@ export default function RecipeDetailScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        <Button
-          label="Back to Recipes"
-          onPress={() => router.replace("/recipes")}
-          variant="olive"
-        />
+        <Pressable
+          onPress={() => router.back()}
+          style={styles.breadcrumb}
+        >
+          <Text style={styles.breadcrumbText}>← Back to recipes</Text>
+        </Pressable>
         <View style={styles.header}>
           <Text style={styles.title}>{recipe.title}</Text>
           <Text style={styles.copy}>{recipe.description}</Text>
@@ -61,13 +62,13 @@ export default function RecipeDetailScreen() {
             </View>
           ))}
         </Section>
-        <Section title="Missing Ingredients">
-          <Text style={styles.copy}>
-            {recipe.missingIngredients.length
-              ? recipe.missingIngredients.join(", ")
-              : "Nothing major"}
-          </Text>
-        </Section>
+        {recipe.missingIngredients.length > 0 ? (
+          <Section title="You'll also need">
+            <Text style={styles.copy}>
+              {recipe.missingIngredients.join(", ")}
+            </Text>
+          </Section>
+        ) : null}
         <Section title="Steps">
           {recipe.steps.map((step, index) => (
             <View key={step} style={styles.stepRow}>
@@ -134,6 +135,14 @@ const styles = StyleSheet.create({
     gap: 14,
     padding: 24,
     paddingBottom: 32,
+  },
+  breadcrumb: {
+    alignSelf: "flex-start",
+  },
+  breadcrumbText: {
+    color: "#71843d",
+    fontSize: 15,
+    fontWeight: "700",
   },
   emptyState: {
     flex: 1,

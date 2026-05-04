@@ -95,6 +95,12 @@ export default function RecipeResultsScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
+        <Pressable
+          onPress={() => router.back()}
+          style={styles.breadcrumb}
+        >
+          <Text style={styles.breadcrumbText}>← Start over</Text>
+        </Pressable>
         <View style={styles.header}>
           <Text style={styles.title}>Recipe ideas</Text>
           <Text style={styles.copy}>
@@ -192,6 +198,14 @@ export default function RecipeResultsScreen() {
 }
 
 const styles = StyleSheet.create({
+  breadcrumb: {
+    alignSelf: "flex-start",
+  },
+  breadcrumbText: {
+    color: "#71843d",
+    fontSize: 15,
+    fontWeight: "700",
+  },
   safeArea: {
     flex: 1,
     backgroundColor: "#f8f7f4",
