@@ -9,6 +9,7 @@ type RecipeStore = {
   imageUris: string[];
   imageBase64s: string[];
   manualIngredients: string;
+  correctionContext: string;
   detectedIngredients: string[];
   recipeBatches: Recipe[][];
   currentBatchIndex: number;
@@ -22,6 +23,7 @@ type RecipeStore = {
   removeImage: (index: number) => void;
   clearImages: () => void;
   setManualIngredients: (value: string) => void;
+  setCorrectionContext: (value: string) => void;
   setDetectedIngredients: (ingredients: string[]) => void;
   addBatch: (recipes: Recipe[]) => void;
   goToNextBatch: () => void;
@@ -41,6 +43,7 @@ const initialState = {
   imageUris: [],
   imageBase64s: [],
   manualIngredients: "",
+  correctionContext: "",
   detectedIngredients: [],
   recipeBatches: [],
   currentBatchIndex: 0,
@@ -78,6 +81,7 @@ export const useRecipeStore = create<RecipeStore>()(
         })),
       clearImages: () => set({ imageUris: [], imageBase64s: [] }),
       setManualIngredients: (value) => set({ manualIngredients: value }),
+      setCorrectionContext: (value) => set({ correctionContext: value }),
       setDetectedIngredients: (ingredients) =>
         set({ detectedIngredients: ingredients }),
       addBatch: (recipes) =>
@@ -113,6 +117,7 @@ export const useRecipeStore = create<RecipeStore>()(
       startNewGeneration: () =>
         set({
           detectedIngredients: [],
+          correctionContext: "",
           recipeBatches: [],
           currentBatchIndex: 0,
           shownRecipeFingerprints: [],
@@ -130,6 +135,7 @@ export const useRecipeStore = create<RecipeStore>()(
         imageUris: state.imageUris,
         imageBase64s: state.imageBase64s,
         manualIngredients: state.manualIngredients,
+        correctionContext: state.correctionContext,
         detectedIngredients: state.detectedIngredients,
         recipeBatches: state.recipeBatches,
         currentBatchIndex: state.currentBatchIndex,

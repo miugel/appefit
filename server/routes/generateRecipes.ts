@@ -75,6 +75,7 @@ generateRecipesRouter.post("/", async (request, response) => {
     for (let attempt = 0; attempt <= MAX_GENERATION_RETRIES; attempt += 1) {
       const batch = await generateRecipeBatch({
         ingredients: detectedIngredients,
+        correctionContext: input.correctionContext,
         excludeRecipeFingerprints: Array.from(excludedFingerprints),
         attempt,
       }).then(filterRecipesByMissingIngredientLimit);
@@ -209,10 +210,12 @@ async function extractIngredientsFromImage(imageBase64: string) {
 
 async function generateRecipeBatch({
   ingredients,
+  correctionContext,
   excludeRecipeFingerprints,
   attempt,
 }: {
   ingredients: string[];
+  correctionContext?: string;
   excludeRecipeFingerprints: string[];
   attempt: number;
 }) {
@@ -229,6 +232,7 @@ async function generateRecipeBatch({
         role: "user",
         content: buildRecipeGenerationPrompt({
           ingredients,
+          correctionContext,
           excludeRecipeFingerprints,
           attempt,
           maxMissingIngredients: MAX_MISSING_INGREDIENTS_PER_RECIPE,

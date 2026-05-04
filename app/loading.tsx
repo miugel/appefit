@@ -104,6 +104,7 @@ function useGenerateRecipes() {
     const {
       imageBase64s,
       manualIngredients,
+      correctionContext,
       shownRecipeFingerprints,
       refreshCount,
       setDetectedIngredients,
@@ -121,6 +122,7 @@ function useGenerateRecipes() {
       const result = await generateRecipes({
         imageBase64s: imageBase64s.filter(Boolean),
         manualIngredients,
+        correctionContext,
         excludeRecipeFingerprints: shownRecipeFingerprints,
         refreshCount,
       });

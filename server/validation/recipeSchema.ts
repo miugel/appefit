@@ -42,6 +42,7 @@ export const GenerateRecipesRequestSchema = z
   .object({
     imageBase64s: z.array(z.string()).optional(),
     manualIngredients: z.string().optional(),
+    correctionContext: z.string().max(500).optional(),
     excludeRecipeFingerprints: z.array(z.string()).default([]),
     refreshCount: z.number().int().nonnegative().default(0),
   })

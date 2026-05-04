@@ -10,11 +10,13 @@ Rules:
 
 export function buildRecipeGenerationPrompt({
   ingredients,
+  correctionContext,
   excludeRecipeFingerprints,
   attempt,
   maxMissingIngredients,
 }: {
   ingredients: string[];
+  correctionContext?: string;
   excludeRecipeFingerprints: string[];
   attempt: number;
   maxMissingIngredients: number;
@@ -32,6 +34,9 @@ The recipes should be satisfying but generally supportive of losing weight: prio
 Available ingredients:
 ${ingredients.join(", ")}
 
+User correction or issue to address:
+${correctionContext?.trim() || "None"}
+
 Do not generate recipes matching or closely resembling these previous recipe fingerprints or titles:
 ${excludeRecipeFingerprints.length ? excludeRecipeFingerprints.join(", ") : "None"}
 ${retryInstruction}
@@ -41,6 +46,7 @@ Rules:
 - Recipes should be realistic for home cooking.
 - Prefer recipes that use the available ingredients.
 - Strongly prefer recipes that use the available ingredients.
+- Treat the user correction as high-priority context. If it says an ingredient was missed, consider it available. If it says an ingredient is unavailable, disliked, or wrong, avoid relying on it.
 - Limit missing ingredients to ${maxMissingIngredients} or fewer per recipe. If a recipe needs more than ${maxMissingIngredients} missing ingredients, choose a simpler recipe concept.
 - Missing ingredients should be common pantry or grocery items.
 - Do not repeat recipe concepts.

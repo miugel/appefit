@@ -3,6 +3,7 @@ import type { Recipe } from "@/types/recipe";
 export type GenerateRecipesRequest = {
   imageBase64s?: string[];
   manualIngredients?: string;
+  correctionContext?: string;
   excludeRecipeFingerprints: string[];
   refreshCount: number;
 };
