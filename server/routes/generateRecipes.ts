@@ -11,6 +11,7 @@ import {
 } from "../llm/prompts";
 import { uniqueNonExcludedRecipes } from "../utils/dedupe";
 import { normalizeIngredients } from "../utils/normalizeIngredients";
+import { validateImages } from "../utils/validateImages";
 import {
   GenerateRecipesApiResponseSchema,
   GenerateRecipesRequestSchema,
@@ -43,6 +44,15 @@ generateRecipesRouter.post("/", async (request, response) => {
 
   const input = parsedRequest.data;
   const imageBase64s = input.imageBase64s?.filter((image) => image.trim());
+
+  // Validate images before processing
+  const imageValidation = validateImages(imageBase64s);
+  if (!imageValidation.valid) {
+    response.status(400).json({
+      error: imageValidation.error,
+    });
+    return;
+  }
 
   if (input.refreshCount > MAX_REFRESHES_PER_SESSION) {
     response.json(

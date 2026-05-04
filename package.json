@@ -5,12 +5,16 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
+    "dev": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
     "server": "tsx server/index.ts",
     "start:server": "tsx server/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\""
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
@@ -44,6 +48,11 @@
     "@types/node": "latest",
     "@types/react": "~19.1.10",
     "@types/uuid": "latest",
+    "@typescript-eslint/eslint-plugin": "latest",
+    "@typescript-eslint/parser": "latest",
+    "eslint": "latest",
+    "eslint-config-prettier": "latest",
+    "prettier": "latest",
     "typescript": "latest"
   }
 }

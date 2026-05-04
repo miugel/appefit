@@ -17,6 +17,7 @@ import { IngredientChip } from "@/components/IngredientChip";
 import { RecipeCard } from "@/components/RecipeCard";
 import { useRecipeStore } from "@/store/recipeStore";
 import { ERROR_MESSAGES, UI } from "@/constants/messages";
+import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 
 export default function RecipeResultsScreen() {
   const [ingredientsOpen, setIngredientsOpen] = useState(false);
@@ -66,62 +67,65 @@ export default function RecipeResultsScreen() {
     }
   }
 
-  async function handleApplyFix() {
-    const trimmedFix = fixText.trim();
+  const debouncedHandleApplyFix = useDebouncedCallback(
+    async () => {
+      const trimmedFix = fixText.trim();
 
-    if (!trimmedFix) {
-      setFixError(ERROR_MESSAGES.NO_FIX_TEXT);
-      return;
-    }
-
-    const {
-      imageBase64s,
-      manualIngredients,
-      shownRecipeFingerprints,
-      setCorrectionContext,
-      setDetectedIngredients,
-      replaceBatch,
-      addShownRecipes,
-      setCanRefresh,
-      setExhaustionReason,
-    } = useRecipeStore.getState();
-
-    setIsFixing(true);
-    setFixError(undefined);
-    setCorrectionContext(trimmedFix);
-
-    try {
-      const result = await generateRecipes({
-        imageBase64s: imageBase64s.filter(Boolean),
-        manualIngredients,
-        correctionContext: trimmedFix,
-        excludeRecipeFingerprints: shownRecipeFingerprints,
-        refreshCount: 0,
-      });
-
-      setDetectedIngredients(result.detectedIngredients);
-      setCanRefresh(result.canRefresh);
-      setExhaustionReason(result.reason);
-
-      if (result.recipes.length > 0) {
-        replaceBatch(result.recipes);
-        addShownRecipes(result.recipes);
-        setFixText("");
-        setFixOpen(false);
+      if (!trimmedFix) {
+        setFixError(ERROR_MESSAGES.NO_FIX_TEXT);
         return;
       }
 
-      setFixOpen(false);
-    } catch (error) {
-      setFixError(
-        error instanceof Error
-          ? error.message
-          : ERROR_MESSAGES.CONNECTION,
-      );
-    } finally {
-      setIsFixing(false);
-    }
-  }
+      const {
+        imageBase64s,
+        manualIngredients,
+        shownRecipeFingerprints,
+        setCorrectionContext,
+        setDetectedIngredients,
+        replaceBatch,
+        addShownRecipes,
+        setCanRefresh,
+        setExhaustionReason,
+      } = useRecipeStore.getState();
+
+      setIsFixing(true);
+      setFixError(undefined);
+      setCorrectionContext(trimmedFix);
+
+      try {
+        const result = await generateRecipes({
+          imageBase64s: imageBase64s.filter(Boolean),
+          manualIngredients,
+          correctionContext: trimmedFix,
+          excludeRecipeFingerprints: shownRecipeFingerprints,
+          refreshCount: 0,
+        });
+
+        setDetectedIngredients(result.detectedIngredients);
+        setCanRefresh(result.canRefresh);
+        setExhaustionReason(result.reason);
+
+        if (result.recipes.length > 0) {
+          replaceBatch(result.recipes);
+          addShownRecipes(result.recipes);
+          setFixText("");
+          setFixOpen(false);
+          return;
+        }
+
+        setFixOpen(false);
+      } catch (error) {
+        setFixError(
+          error instanceof Error
+            ? error.message
+            : ERROR_MESSAGES.CONNECTION,
+        );
+      } finally {
+        setIsFixing(false);
+      }
+    },
+    300,
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -204,7 +208,7 @@ export default function RecipeResultsScreen() {
                         <Button
                           disabled={isFixing}
                           label={isFixing ? "Updating..." : "Regenerate recipes"}
-                          onPress={handleApplyFix}
+                          onPress={debouncedHandleApplyFix}
                           variant="olive"
                         />
                       </View>

@@ -19,6 +19,7 @@ import { MAX_RECIPE_PHOTOS } from "@/config/photos";
 import { OliveLogo } from "@/components/OliveLogo";
 import { useRecipeStore } from "@/store/recipeStore";
 import { ERROR_MESSAGES } from "@/constants/messages";
+import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 
 export default function IngredientInputScreen() {
   const [error, setError] = useState("");
@@ -34,16 +35,19 @@ export default function IngredientInputScreen() {
   const startNewGeneration = useRecipeStore((state) => state.startNewGeneration);
   const recipeBatches = useRecipeStore((state) => state.recipeBatches);
 
-  function handleGenerate() {
-    if (!manualIngredients.trim() && !imageUris.length) {
-      setError(ERROR_MESSAGES.NO_INGREDIENTS);
-      return;
-    }
+  const debouncedHandleGenerate = useDebouncedCallback(
+    async () => {
+      if (!manualIngredients.trim() && !imageUris.length) {
+        setError(ERROR_MESSAGES.NO_INGREDIENTS);
+        return;
+      }
 
-    setError("");
-    startNewGeneration();
-    router.push("/loading");
-  }
+      setError("");
+      startNewGeneration();
+      router.push("/loading");
+    },
+    300,
+  );
 
   function handleSlotPress(index: number) {
     if (index < imageUris.length || isPickingImage) return;
@@ -195,7 +199,7 @@ export default function IngredientInputScreen() {
         <Button
           disabled={!manualIngredients.trim() && !imageUris.length}
           label="Generate Recipes"
-          onPress={handleGenerate}
+          onPress={debouncedHandleGenerate}
           variant="olive"
           style={styles.submit}
         />

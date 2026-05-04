@@ -1,8 +1,10 @@
 import type { Recipe } from "@/types/recipe";
 import { MAX_RECIPE_PHOTOS } from "@/config/photos";
 import { ERROR_MESSAGES, UI } from "@/constants/messages";
+import { withTimeout } from "@/utils/debounce";
 
 const MAX_RECIPE_REQUEST_BYTES = 25 * 1024 * 1024;
+const API_TIMEOUT_MS = 30000; // 30 seconds
 
 export type GenerateRecipesRequest = {
   imageBase64s?: string[];
@@ -35,26 +37,38 @@ export async function generateRecipes(
     throw new Error(ERROR_MESSAGES.PHOTOS_TOO_LARGE);
   }
 
-  const response = await fetch(`${getApiBaseUrl()}/generate-recipe`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body,
-  });
+  try {
+    const response = await withTimeout(
+      fetch(`${getApiBaseUrl()}/generate-recipe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+      }),
+      API_TIMEOUT_MS
+    );
 
-  if (!response.ok) {
-    let message = "Something went wrong. Check your connection and try again.";
+    if (!response.ok) {
+      let message = ERROR_MESSAGES.CONNECTION;
 
-    try {
-      const errorBody = (await response.json()) as { error?: string };
-      message = errorBody.error || message;
-    } catch (parseError) {
-      // Keep the fallback message when the server did not return JSON.
+      try {
+        const errorBody = (await response.json()) as { error?: string };
+        message = errorBody.error || message;
+      } catch (parseError) {
+        // Keep the fallback message when the server does not return JSON.
+      }
+
+      throw new Error(message);
     }
 
-    throw new Error(message);
+    return await response.json();
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("timeout")) {
+      throw new Error(
+        "Request took too long. Check your connection and try again."
+      );
+    }
+    throw error;
   }
-
-  return response.json();
 }
 
 function getApiBaseUrl() {
