@@ -75,17 +75,8 @@ export default function LoadingScreen() {
         <Text style={styles.copy}>{generationError}</Text>
         <Button
           label="Try Again"
-          onPress={() => {
-            hasStartedGeneration.current = false;
-            runGeneration();
-          }}
-          variant="olive"
-        />
-        <Button
-          label="Back to Ingredients"
           onPress={() => router.replace("/input")}
-          variant="secondary"
-          style={styles.secondaryAction}
+          variant="olive"
         />
       </View>
     );
@@ -174,8 +165,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     textAlign: "center",
-  },
-  secondaryAction: {
-    marginTop: 2,
   },
 });

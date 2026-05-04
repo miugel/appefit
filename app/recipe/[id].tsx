@@ -64,9 +64,14 @@ export default function RecipeDetailScreen() {
         </Section>
         {recipe.missingIngredients.length > 0 ? (
           <Section title="You'll also need">
-            <Text style={styles.copy}>
-              {recipe.missingIngredients.join(", ")}
-            </Text>
+            <View style={styles.bulletList}>
+              {recipe.missingIngredients.map((ingredient) => (
+                <View key={ingredient} style={styles.bulletRow}>
+                  <Text style={styles.bullet}>{"\u2022"}</Text>
+                  <Text style={styles.bulletText}>{ingredient}</Text>
+                </View>
+              ))}
+            </View>
           </Section>
         ) : null}
         <Section title="Steps">
@@ -180,6 +185,27 @@ const styles = StyleSheet.create({
     color: "#52606d",
     fontSize: 16,
     lineHeight: 24,
+  },
+  bulletList: {
+    gap: 8,
+  },
+  bulletRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  bullet: {
+    color: "#71843d",
+    fontSize: 18,
+    fontWeight: "800",
+    lineHeight: 24,
+  },
+  bulletText: {
+    flex: 1,
+    color: "#52606d",
+    fontSize: 16,
+    lineHeight: 24,
+    textTransform: "capitalize",
   },
   row: {
     flexDirection: "row",
