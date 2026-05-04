@@ -111,7 +111,7 @@ export default function IngredientInputScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.breadcrumbRow}>
-            <Pressable onPress={() => router.back()}>
+            <Pressable onPress={() => router.navigate("/")}>
               <Text style={styles.breadcrumbText}>← AppéFit</Text>
             </Pressable>
             {recipeBatches.length > 0 ? (
@@ -124,7 +124,7 @@ export default function IngredientInputScreen() {
             <OliveLogo size="sm" />
             <Text style={styles.title}>Add your ingredients</Text>
             <Text style={styles.copy}>
-              Snap what you have and AppéFit will turn it into five healthy
+              Snap what you have and AppéFit will turn it into macro-conscious, healthy
               recipe ideas.
             </Text>
           </View>
@@ -137,9 +137,6 @@ export default function IngredientInputScreen() {
               </View>
             )}
             <Text style={styles.photoButtonTitle}>Take a Photo</Text>
-            <Text style={styles.photoButtonCopy}>
-              Fastest way to capture fridge, pantry, or counter ingredients.
-            </Text>
             <View style={styles.photoActions}>
               <Pressable
                 disabled={isPickingImage}
@@ -170,10 +167,9 @@ export default function IngredientInputScreen() {
           >
             <View style={styles.secondaryHeaderText}>
               <Text style={styles.secondaryPanelTitle}>Other ways to add</Text>
-              <Text style={styles.secondaryPanelCopy}>
-                {/* Dictate or type ingredients instead. */}
-                Type ingredients instead.
-              </Text>
+              {/* <Text style={styles.secondaryPanelCopy}>
+                Dictate or type ingredients instead.
+              </Text> */}
             </View>
             <Text style={styles.chevron}>{isSecondaryOpen ? "−" : "+"}</Text>
           </Pressable>
@@ -188,7 +184,7 @@ export default function IngredientInputScreen() {
                 <Text style={styles.voicePreview}>{voicePreview}</Text>
               ) : null} */}
               <View style={styles.fieldGroup}>
-                <Text style={styles.label}>Manual ingredients</Text>
+                <Text style={styles.label}>Type ingredients</Text>
                 <TextInput
                   multiline
                   onChangeText={(value) => {
@@ -281,13 +277,6 @@ const styles = StyleSheet.create({
     color: "#26351d",
     fontSize: 22,
     fontWeight: "800",
-  },
-  photoButtonCopy: {
-    maxWidth: 280,
-    color: "#52606d",
-    fontSize: 15,
-    lineHeight: 22,
-    textAlign: "center",
   },
   photoButtonMeta: {
     overflow: "hidden",

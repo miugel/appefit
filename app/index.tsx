@@ -12,8 +12,7 @@ export default function GetStartedScreen() {
         <OliveLogo size="lg" />
         <Text style={styles.title}>AppéFit</Text>
         <Text style={styles.copy}>
-          Turn the ingredients you have into healthy recipes you actually want
-          to cook.
+          Turn the ingredients you have at home into a healthy masterpiece.
         </Text>
       </View>
       <Button
