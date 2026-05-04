@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "@/components/Button";
+import { MAX_RECIPE_PHOTOS } from "@/config/photos";
 import { OliveLogo } from "@/components/OliveLogo";
 import { useRecipeStore } from "@/store/recipeStore";
 
@@ -40,8 +41,6 @@ export default function IngredientInputScreen() {
   const startNewGeneration = useRecipeStore((state) => state.startNewGeneration);
   const recipeBatches = useRecipeStore((state) => state.recipeBatches);
 
-  const MAX_PHOTOS = 3;
-
   function handleGenerate() {
     if (!manualIngredients.trim() && !imageUris.length) {
       setError("Add a photo or type ingredients before generating recipes.");
@@ -64,7 +63,7 @@ export default function IngredientInputScreen() {
   }
 
   async function pickImage(source: "camera" | "library") {
-    if (imageUris.length >= MAX_PHOTOS) return;
+    if (imageUris.length >= MAX_RECIPE_PHOTOS) return;
 
     setError("");
     setIsPickingImage(true);
@@ -84,14 +83,11 @@ export default function IngredientInputScreen() {
         return;
       }
 
-      const remainingSlots = MAX_PHOTOS - imageUris.length;
+      const remainingSlots = MAX_RECIPE_PHOTOS - imageUris.length;
       const result =
         source === "camera"
           ? await ImagePicker.launchCameraAsync(cameraPickerOptions)
-          : await ImagePicker.launchImageLibraryAsync({
-              ...libraryPickerOptions,
-              selectionLimit: remainingSlots,
-            });
+          : await ImagePicker.launchImageLibraryAsync(libraryPickerOptions);
 
       if (result.canceled) {
         return;
@@ -143,10 +139,10 @@ export default function IngredientInputScreen() {
           <View style={styles.photoSection}>
             <Text style={styles.photoSectionTitle}>Photos</Text>
             <Text style={styles.photoSectionCopy}>
-              Use photos for your fridge, pantry, or counter.
+              Use photos of your fridge, pantry, or counter.
             </Text>
             <View style={styles.photoSlots}>
-              {Array.from({ length: MAX_PHOTOS }).map((_, index) => {
+              {Array.from({ length: MAX_RECIPE_PHOTOS }).map((_, index) => {
                 const uri = imageUris[index];
                 return (
                   <Pressable
@@ -447,12 +443,12 @@ const cameraPickerOptions: ImagePicker.ImagePickerOptions = {
   allowsEditing: false,
   base64: true,
   mediaTypes: ["images"],
-  quality: 0.75,
+  quality: 0.4,
 };
 
 const libraryPickerOptions: ImagePicker.ImagePickerOptions = {
-  allowsMultipleSelection: true,
+  allowsMultipleSelection: MAX_RECIPE_PHOTOS > 1,
   base64: true,
   mediaTypes: ["images"],
-  quality: 0.75,
+  quality: 0.4,
 };

@@ -33,9 +33,10 @@ generateRecipesRouter.post("/", async (request, response) => {
   const parsedRequest = GenerateRecipesRequestSchema.safeParse(request.body);
 
   if (!parsedRequest.success) {
+    const details = parsedRequest.error.flatten();
     response.status(400).json({
-      error: "Invalid recipe generation request.",
-      details: parsedRequest.error.flatten(),
+      error: formatRecipeRequestError(details),
+      details,
     });
     return;
   }
@@ -263,4 +264,18 @@ function filterRecipesByMissingIngredientLimit(recipes: ServerRecipe[]) {
     (recipe) =>
       recipe.missingIngredients.length <= MAX_MISSING_INGREDIENTS_PER_RECIPE,
   );
+}
+
+function formatRecipeRequestError(details: {
+  formErrors: string[];
+  fieldErrors: Record<string, string[] | undefined>;
+}) {
+  const errors = [
+    ...details.formErrors,
+    ...Object.entries(details.fieldErrors).flatMap(([field, messages]) =>
+      (messages ?? []).map((message) => `${field}: ${message}`),
+    ),
+  ];
+
+  return errors[0] ?? "Invalid recipe generation request.";
 }

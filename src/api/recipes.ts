@@ -1,4 +1,7 @@
 import type { Recipe } from "@/types/recipe";
+import { MAX_RECIPE_PHOTOS } from "@/config/photos";
+
+const MAX_RECIPE_REQUEST_BYTES = 12 * 1024 * 1024;
 
 export type GenerateRecipesRequest = {
   imageBase64s?: string[];
@@ -20,13 +23,23 @@ export async function generateRecipes(
 ): Promise<GenerateRecipesResponse> {
   const payload = {
     ...request,
-    imageBase64s: request.imageBase64s?.filter(Boolean),
+    correctionContext: request.correctionContext?.slice(0, 1500),
+    imageBase64s: request.imageBase64s
+      ?.filter(Boolean)
+      .slice(0, MAX_RECIPE_PHOTOS),
   };
+  const body = JSON.stringify(payload);
+
+  if (body.length > MAX_RECIPE_REQUEST_BYTES) {
+    throw new Error(
+      "Those photos are too large to send. Remove one photo or retake a smaller set.",
+    );
+  }
 
   const response = await fetch(`${getApiBaseUrl()}/generate-recipe`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body,
   });
 
   if (!response.ok) {

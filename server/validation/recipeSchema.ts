@@ -40,9 +40,16 @@ export const IngredientExtractionResponseSchema = z.object({
 
 export const GenerateRecipesRequestSchema = z
   .object({
-    imageBase64s: z.array(z.string()).optional(),
+    imageBase64s: z
+      .array(z.string())
+      .optional()
+      .transform((images) => images?.filter((image) => image.trim())),
     manualIngredients: z.string().optional(),
-    correctionContext: z.string().max(500).optional(),
+    correctionContext: z
+      .string()
+      .trim()
+      .max(1500, "Keep fix notes under 1500 characters.")
+      .optional(),
     excludeRecipeFingerprints: z.array(z.string()).default([]),
     refreshCount: z.number().int().nonnegative().default(0),
   })
