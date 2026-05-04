@@ -444,16 +444,15 @@ const styles = StyleSheet.create({
 });
 
 const cameraPickerOptions: ImagePicker.ImagePickerOptions = {
-  allowsEditing: true,
-  aspect: [4, 3],
+  allowsEditing: false,
   base64: true,
   mediaTypes: ["images"],
-  quality: 0.72,
+  quality: 0.75,
 };
 
 const libraryPickerOptions: ImagePicker.ImagePickerOptions = {
   allowsMultipleSelection: true,
   base64: true,
   mediaTypes: ["images"],
-  quality: 0.72,
+  quality: 0.75,
 };
